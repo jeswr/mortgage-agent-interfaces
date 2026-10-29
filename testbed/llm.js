@@ -14,7 +14,8 @@ function runClaude({ prompt, model, cwd, env, extraArgs = [], streamFile, stderr
     const child = spawn('claude', args, { cwd, env: { ...process.env, ...env }, stdio: ['ignore', out, err], detached: true });
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; try { process.kill(-child.pid, 'SIGTERM'); } catch (e) { /* gone */ } setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL'); } catch (e) { /* gone */ } }, 5000); }, timeoutMs);
-    child.on('exit', (code, signal) => { clearTimeout(timer); fs.closeSync(out); fs.closeSync(err); try { process.kill(-child.pid, 'SIGTERM'); } catch (e) { /* group gone */ } resolve({ code, signal, timedOut, wall_s: (Date.now() - t0) / 1000 }); });
+    child.on('exit', (code, signal) => { clearTimeout(timer); fs.closeSync(out); fs.closeSync(err);
+      try { fs.appendFileSync(require('path').join(require('path').dirname(streamFile), 'cli-procs.jsonl'), JSON.stringify({ stream: require('path').basename(streamFile), start: new Date(t0).toISOString(), end: new Date().toISOString(), wall_s: (Date.now() - t0) / 1000 }) + '\n'); } catch (e) { /* best effort */ } try { process.kill(-child.pid, 'SIGTERM'); } catch (e) { /* group gone */ } resolve({ code, signal, timedOut, wall_s: (Date.now() - t0) / 1000 }); });
   });
 }
 

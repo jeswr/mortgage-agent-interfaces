@@ -1,0 +1,76 @@
+{
+ "lender": "bhl",
+ "recipient": "brightpath-home-lending",
+ "application_id": "BHL-26001",
+ "tokens": [
+  {
+   "org": "jfcu",
+   "subject": "sam.okafor-reyes",
+   "token": "pt_jfcu_bhl_b724ac06f0a7"
+  },
+  {
+   "org": "nsb",
+   "subject": "nadia.okafor-reyes",
+   "token": "pt_nsb_bhl_283d020ca9ec"
+  },
+  {
+   "org": "lgh",
+   "subject": "sam.okafor-reyes",
+   "token": "pt_lgh-sam_bhl_0e02de14a2ba"
+  },
+  {
+   "org": "lgh",
+   "subject": "nadia.okafor-reyes",
+   "token": "pt_lgh-nadia_bhl_56f34817a1c0"
+  },
+  {
+   "org": "bhl",
+   "subject": "household:okafor-reyes",
+   "token": "pt_lender_bhl_b0261315d8d6"
+  }
+ ],
+ "accounts": [
+  {
+   "org": "jfcu",
+   "subject": "sam.okafor-reyes",
+   "account_id": "jfcu-4417",
+   "periods": [
+    "2026-08",
+    "2026-09"
+   ]
+  },
+  {
+   "org": "jfcu",
+   "subject": "sam.okafor-reyes",
+   "account_id": "jfcu-8820",
+   "periods": [
+    "2026-08",
+    "2026-09"
+   ]
+  },
+  {
+   "org": "nsb",
+   "subject": "nadia.okafor-reyes",
+   "account_id": "nsb-2093",
+   "periods": [
+    "2026-08",
+    "2026-09"
+   ]
+  },
+  {
+   "org": "nsb",
+   "subject": "nadia.okafor-reyes",
+   "account_id": "nsb-5561",
+   "periods": [
+    "2026-08",
+    "2026-09"
+   ]
+  }
+ ],
+ "payslip_refs": [
+  "rec_lgh_36168b4c34",
+  "rec_lgh_270ee34e91",
+  "rec_lgh_26de2e7c62",
+  "rec_lgh_ddd6614b94"
+ ]
+}

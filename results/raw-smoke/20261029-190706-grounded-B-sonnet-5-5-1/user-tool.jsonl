@@ -1,0 +1,17 @@
+{"ts":"2026-10-29T19:07:23.519Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:07:23.545Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:08:17.901Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:08:17.907Z","tool":"request_consent","org":"jfcu","scopes":"Read-only access to Sam's checking and savings account statements (last 2 monthly statements each), to share with the chosen mortgage lender for the 14 Larch Lane application","approved":true}
+{"ts":"2026-10-29T19:08:34.528Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:08:34.532Z","tool":"request_consent","org":"nsb","scopes":"Read-only access to Nadia's personal checking and savings eStatements (last 2 months each), to share with the chosen mortgage lender for the 14 Larch Lane application","approved":true}
+{"ts":"2026-10-29T19:08:51.157Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:08:51.161Z","tool":"request_consent","org":"lgh","scopes":"Read-only access to the last 2 payslips and 2025 W-2 for Sam (E10442) and Nadia (E11873), to share with the chosen mortgage lender for the 14 Larch Lane application","approved":true}
+{"ts":"2026-10-29T19:10:18.510Z","tool":"human_wait","for":"request_code","s":16.6}
+{"ts":"2026-10-29T19:10:18.517Z","tool":"request_code","org":"bhl","channel":"","answered":true}
+{"ts":"2026-10-29T19:12:36.051Z","tool":"save_note","chars":2181}
+{"ts":"2026-10-29T19:12:56.523Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:12:56.580Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:13:49.252Z","tool":"human_wait","for":"request_code","s":16.6}
+{"ts":"2026-10-29T19:13:49.272Z","tool":"request_code","org":"bhl","channel":"sms","answered":true}
+{"ts":"2026-10-29T19:16:46.569Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:16:46.577Z","tool":"ask_user","question":"Brightpath underwriting asks for a written explanation of the $8,000.00 deposit on 09/03/2026 into Sam's Juniper FCU checking (ending 4417). What was the source of that deposit (e.g. gift, sale, bonus, transfer)? Please give the facts you want me to state, and say if it came from a person or account I should name.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

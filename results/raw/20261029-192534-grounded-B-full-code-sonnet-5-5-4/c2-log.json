@@ -1,0 +1,258 @@
+{
+ "final_message": "Application BHL-26001: intent recorded (rate 7.25%), 12 documents uploaded, 2 conditions answered.",
+ "plan": [
+  {
+   "condition_id": "C-BHL-26001-1",
+   "kind": "explanation",
+   "question_for_borrowers": "Please explain the source of the $8,000.00 deposit made on 09/03/2026 into account ending 4417 (Sam Okafor-Reyes, Juniper FCU checking). For example, was it a gift, a transfer from another account, a sale of an asset, a bonus, or something else? Please include who the funds came from and the purpose, if applicable.",
+   "documents": null
+  },
+  {
+   "condition_id": "C-BHL-26001-2",
+   "kind": "documents",
+   "documents": "w2"
+  }
+ ],
+ "log": [
+  {
+   "method": "POST",
+   "url": "/api/v2/oauth/token",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/ngsb/open/v1/oauth2/token",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/peoplepay/rest/auth/token",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/auth/sessions",
+   "status": 201
+  },
+  {
+   "method": "GET",
+   "url": "/bhl/api/v1/loan-applications/la_1001/loan-estimate",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-estimates/LE-BHL-26001-1/intent-to-proceed",
+   "status": 201
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/accounts/JFCU-4417/statements?fromDate=2026-08-01&toDate=2026-09-31",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-4417-202608/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-4417-202609/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/accounts/JFCU-8820/statements?fromDate=2026-08-01&toDate=2026-09-31",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-8820-202608/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-8820-202609/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG2093X/estatements?month=08/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-2093-202608?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG2093X/estatements?month=09/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-2093-202609?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG5561X/estatements?month=08/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-5561-202608?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG5561X/estatements?month=09/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-5561-202609?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers/E10442/payStatements?since=20260101",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E10442-20261016/file",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E10442-20261002/file",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers/E11873/payStatements?since=20260101",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E11873-20261016/file",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E11873-20261002/file",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/document-package",
+   "status": 202
+  },
+  {
+   "method": "GET",
+   "url": "/bhl/api/v1/loan-applications/la_1001/conditions",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/conditions/C-BHL-26001-1/responses",
+   "status": 201
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers/E10442/taxForms?year=2025",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/taxForms/LGH-W2-E10442-2025/file",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/conditions/C-BHL-26001-2/documents",
+   "status": 201
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers/E11873/taxForms?year=2025",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/taxForms/LGH-W2-E11873-2025/file",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/conditions/C-BHL-26001-2/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/conditions/C-BHL-26001-2/responses",
+   "status": 201
+  }
+ ]
+}

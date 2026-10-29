@@ -1,0 +1,29 @@
+{
+ "condition": "search-scale",
+ "N": 10,
+ "answer": {
+  "slug": "evergreen-funding",
+  "name": "Evergreen Funding",
+  "product_code": "EF06-30",
+  "rate_percent": 7
+ },
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 10,
+  "triples": 510,
+  "build_ms": 744
+ },
+ "products_list_calls": {
+  "cedar-mortgage-group": 1,
+  "harbor-bank-mortgage": 1,
+  "cascade-mortgage-group": 1,
+  "pioneer-home-finance": 1,
+  "sandy-river-mortgage": 1,
+  "evergreen-funding": 1,
+  "timberline-home-loans": 1,
+  "willamette-mortgage-company": 1,
+  "timberline-credit-union": 1,
+  "alder-funding": 1
+ },
+ "pages": {}
+}

@@ -1,0 +1,25 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-200102-grounded-standing-C1-sonnet-5-5-3",
+    "cond=grounded",
+    "seed=20261029-200102-grounded-standing-C1-sonnet-5-5-3",
+    "human=grant",
+    "nonce=s1",
+    "standing"
+   ]
+  },
+  "agentapi": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-agentapi.js",
+    "./results/raw/20261029-200102-grounded-standing-C1-sonnet-5-5-3",
+    "7340",
+    "realistic"
+   ]
+  }
+ }
+}

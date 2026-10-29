@@ -1,0 +1,28 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-194637-search-scale-n30-A-sonnet-5-5-2",
+    "cond=search-scale",
+    "choice"
+   ]
+  },
+  "browser": {
+   "command": "npx",
+   "args": [
+    "-y",
+    "@playwright/mcp@0.0.83",
+    "--headless",
+    "--isolated",
+    "--output-dir",
+    "./results/raw/20261029-194637-search-scale-n30-A-sonnet-5-5-2/work/downloads",
+    "--allowed-origins",
+    "http://127.0.0.1:7261;http://columbia-lending.localhost:7261;http://larch-home-finance.localhost:7261;http://alder-home-loans.localhost:7261;http://wallowa-lending.localhost:7261;http://larch-funding.localhost:7261;http://columbia-funding.localhost:7261;http://silver-falls-mortgage-group.localhost:7261;http://summit-home-finance.localhost:7261;http://steelhead-home-loans.localhost:7261;http://bluebird-mortgage-company.localhost:7261;http://wallowa-home-loans.localhost:7261;http://cascade-bank-mortgage.localhost:7261;http://columbia-mortgage.localhost:7261;http://mt-hood-home-finance.localhost:7261;http://crater-credit-union.localhost:7261;http://deschutes-mortgage-group.localhost:7261;http://siskiyou-home-loans.localhost:7261;http://basalt-mortgage-company.localhost:7261;http://siskiyou-funding.localhost:7261;http://alder-mortgage-group.localhost:7261;http://alder-credit-union.localhost:7261;http://larch-credit-union.localhost:7261;http://timberline-mortgage-company.localhost:7261;http://sandy-river-mortgage-group.localhost:7261;http://basalt-bank-mortgage.localhost:7261;http://umpqua-mortgage-group.localhost:7261;http://harbor-bank-mortgage.localhost:7261;http://umpqua-bank-mortgage.localhost:7261;http://high-desert-lending.localhost:7261;http://larch-mortgage-group.localhost:7261",
+    "--viewport-size",
+    "1280x900"
+   ]
+  }
+ }
+}

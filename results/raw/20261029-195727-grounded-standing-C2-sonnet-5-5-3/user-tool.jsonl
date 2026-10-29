@@ -1,0 +1,6 @@
+{"ts":"2026-10-29T19:57:29.230Z","tool":"wallet_grant","org":"jfcu","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:57:29.231Z","tool":"wallet_grant","org":"nsb","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:57:29.234Z","tool":"wallet_grant","org":"lgh","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:57:29.238Z","tool":"wallet_grant","org":"bhl","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:58:43.592Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:58:43.594Z","tool":"ask_user","question":"Please explain the source of the $8,000.00 deposit made on 09/03/2026 into your Juniper FCU checking account ending 4417 (Sam Okafor-Reyes). Where did the money come from (for example, a gift, sale of an asset, transfer from another account, or other income), and who provided it?","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

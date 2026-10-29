@@ -1,0 +1,22 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-193617-search-scale-n3-C1-sonnet-5-5-1",
+    "cond=search-scale",
+    "choice"
+   ]
+  },
+  "search": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-search.js",
+    "./results/raw/20261029-193617-search-scale-n3-C1-sonnet-5-5-1",
+    "http://127.0.0.1:7281",
+    "c1"
+   ]
+  }
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "la": "la_1001",
+ "ref": "BHL-26001",
+ "refresh": {
+  "jfcu": "jfcu_rt_dbe254403a36bb6700c9",
+  "nsb": "nsb_rt_80218433279872d50d5b",
+  "lgh": "lgh_rt_cf8817fcb378f1ee0c62",
+  "bhl": "bhl_rt_bcef34b7162d27bf4101"
+ },
+ "jAccts": [
+  "JFCU-4417",
+  "JFCU-8820"
+ ],
+ "nProducts": [
+  "NG2093X",
+  "NG5561X"
+ ]
+}

@@ -1,0 +1,15 @@
+{"ts":"2026-10-29T19:22:05.451Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:22:05.466Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:22:42.859Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:22:42.863Z","tool":"approve_grant","org":"jfcu","scope":"Last 2 monthly statements of Sam's checking and savings, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:22:59.493Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:22:59.498Z","tool":"approve_grant","org":"nsb","scope":"Last 2 monthly statements of Nadia's checking and savings, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:23:16.117Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:23:16.123Z","tool":"approve_grant","org":"lgh","scope":"Last 2 payslips each and 2025 W-2 each for Sam and Nadia, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:23:32.745Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:23:32.748Z","tool":"approve_grant","org":"bhl","scope":"Submit mortgage application with credit check and e-sign consent, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:24:27.369Z","tool":"save_note","chars":1647}
+{"ts":"2026-10-29T19:24:35.082Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:24:35.485Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:26:01.253Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:26:01.262Z","tool":"ask_user","question":"Brightpath's underwriter asks for a written explanation of the $8,000.00 deposit on 09/03/2026 into Sam's Juniper FCU checking (ending 4417). What was the source of that deposit?","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

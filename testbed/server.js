@@ -20,11 +20,13 @@ const COND = process.argv[5] || 'baseline';
 const FRICTION = COND === 'friction';
 const LENDER_API = process.argv[6] === 'lender_api';
 // "realistic": human-in-the-loop auth (OTP codes, OAuth consent, wallet grant approval), lender discovery, RDF endpoints + rates index.
-const REAL = COND === 'realistic';
+const GROUNDED = COND === 'grounded'; // realistic + market figures, Reg Z order, async Loan Estimate, 2 conditions, W-2s, page weight and latency
+const REAL = COND === 'realistic' || GROUNDED;
+const PRODUCTS = () => (GROUNDED ? D.PRODUCTS_G : D.PRODUCTS);
 const ORGX = REAL ? { ...D.ORGS, ...D.EXTRA_ORGS } : D.ORGS;
 const HUMAN_OTP = path.join(RUN_DIR, 'human-otp.jsonl'); // arms B-full / B-full-code: the lender also has a bespoke API
 fs.mkdirSync(RUN_DIR, { recursive: true });
-const CRED = F.credentials(SEED);
+const CRED = F.credentials(SEED, COND);
 const GRANTS = Object.fromEntries(CRED.grants.map((g) => [g.token, g]));
 const LOG = path.join(RUN_DIR, 'server-requests.jsonl');
 const STATE_FILE = path.join(RUN_DIR, 'state.json');
@@ -112,12 +114,65 @@ function payslipLines(p) {
   L.push(`Total deductions: ${money(p.total_deductions)}`, `NET PAY: ${money(p.net)}`, `YTD gross: ${money(p.ytd_gross)}   YTD net: ${money(p.ytd_net)}`);
   return L;
 }
+function w2Lines(w) {
+  return [`FORM W-2 WAGE AND TAX STATEMENT ${w.tax_year} (copy for employee)`, `DOCID: ${w.docid}`, `Employer: ${w.employer}  EIN ${w.employer_ein}`, `Employee: ${w.employee_name} (${w.employee_id})`,
+    `Box 1 Wages, tips, other compensation: ${money(w.wages)}`, `Box 2 Federal income tax withheld: ${money(w.federal_tax_withheld)}`, 'Fictional document for a research testbed.'];
+}
 function access(org, docid, via) { state.docs_accessed.push({ ts: new Date().toISOString(), org, docid, via }); save(); }
 const DOCID_RE = /DOCID:\s*([A-Z0-9-]+)/g;
 function docidsIn(buf) { const s = buf.toString('latin1'); const o = new Set(); let m; DOCID_RE.lastIndex = 0; while ((m = DOCID_RE.exec(s))) o.add(m[1]); return [...o]; }
 
 // ---------- web portal chrome ----------
+// grounded: realistic page weight. Boilerplate (utility bar, mega-menu navigation, promotional panels, footer link columns and legal text)
+// sized so that accessibility snapshots of typical pages approach the measured real median (~12k characters; assumptions.md row 27).
+const BOILER = {};
+function boilerplate(k) {
+  if (BOILER[k]) return BOILER[k];
+  const o = ORGX[k]; const lender = ['bhl', 'cml', 'srm'].includes(k); const payroll = k === 'lgh';
+  const menus = payroll ? { 'My pay': ['Pay statements', 'Direct deposit', 'Tax withholding (W-4)', 'Tax forms', 'Pay calendar', 'Expense reimbursement', 'Earned wage access', 'Pay history export'],
+    'Time': ['Timesheet', 'Schedule', 'Time-off requests', 'Leave balances', 'Shift swaps', 'Overtime policy', 'Holiday calendar', 'Clock-in history'],
+    'Benefits': ['Medical', 'Dental', 'Vision', 'Retirement 403(b)', 'Life insurance', 'Disability', 'FSA and HSA', 'Open enrollment', 'Dependents', 'Beneficiaries'],
+    'Profile': ['Personal information', 'Emergency contacts', 'Banking information', 'Security settings', 'Notifications', 'Documents', 'Training records', 'Certifications'],
+    'Help': ['Help center', 'Contact HR', 'Payroll FAQ', 'Report a problem', 'Accessibility', 'Privacy', 'Policies', 'Ask PeoplePay'] }
+    : lender ? { 'Buy a home': ['Mortgage basics', 'First-time buyers', 'How much can I afford?', 'Prequalification', 'Down payment help', 'Closing costs explained', 'Home buying checklist', 'Find a loan officer', 'Find a real estate agent', 'Calculators'],
+      'Refinance': ['Refinance rates', 'Cash-out refinance', 'Rate-and-term refinance', 'Refinance calculator', 'When to refinance', 'Streamline programs', 'Refinance checklist', 'Break-even estimator'],
+      'Loan options': ['30-year fixed', '20-year fixed', '15-year fixed', 'Adjustable-rate (ARM)', 'FHA loans', 'VA loans', 'USDA loans', 'Jumbo loans', 'Construction loans', 'Renovation loans', 'Second homes', 'Investment property'],
+      'Rates & tools': ['Today\'s rates', 'Rate alerts', 'Affordability calculator', 'Payment calculator', 'Amortization schedule', 'Rent vs. buy', 'Points calculator', 'Closing cost estimator'],
+      'Resources': ['Learning center', 'Glossary', 'Loan process timeline', 'Document checklist', 'Credit score guide', 'Homeowners insurance', 'Property taxes', 'Help center', 'Contact us'] }
+    : { 'Checking': ['Everyday checking', 'Premier checking', 'Student checking', 'Second-chance checking', 'Compare checking', 'Debit cards', 'Overdraft options', 'Early direct deposit', 'Zelle® payments', 'Bill pay'],
+      'Savings & CDs': ['High-yield savings', 'Money market', 'Certificates (CDs)', 'Kids savings', 'Holiday club', 'IRA savings', 'Rates', 'Savings calculator'],
+      'Credit cards': ['Cash back card', 'Travel rewards card', 'Secured card', 'Balance transfer', 'Compare cards', 'Card benefits', 'Credit score tools', 'Pre-qualify'],
+      'Loans': ['Mortgages', 'Home equity line', 'Auto loans', 'Personal loans', 'Student loan refinance', 'Loan payment center', 'Rates', 'Calculators', 'Apply'],
+      'Investing & retirement': ['Brokerage', 'Retirement accounts', 'Financial planning', 'Robo-advisor', 'Rollovers', 'Market insights', 'Wealth management', 'Schedule a meeting'],
+      'Support': ['Help center', 'Contact us', 'Find a branch or ATM', 'Report fraud', 'Security center', 'Accessibility', 'Español', 'Routing number', 'Order checks', 'Travel notice'] };
+  const slug = (t) => '/' + t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const mega = Object.entries(menus).map(([h, items]) => `<li><span>${esc(h)}</span><ul>${items.map((t) => `<li><a href="/info${slug(t)}">${esc(t)}</a></li>`).join('')}</ul></li>`).join('');
+  const util = `<div class="util"><a href="/info/locations">Locations</a> <a href="/info/contact">Contact us</a> <a href="/info/help">Help</a> <a href="/info/espanol">Español</a> <a href="/info/accessibility">Accessibility</a> <form role="search" action="/info/search" style="display:inline"><label>Search <input name="q" type="search" placeholder="How can we help?"></label> <button>Search</button></form></div>`;
+  const promos = (lender ? [['Lock your rate for 60 days', 'Shop for your next home with confidence. Our extended rate lock protects you if rates rise while you house hunt. Conditions apply.', 'Learn about rate locks'],
+    ['Closing cost credit up to $1,500', 'Eligible first-time buyers can receive a lender credit toward closing costs on purchase loans that close by December 31, 2026.', 'See if you qualify'],
+    ['Talk to a loan officer', 'Get answers about loan options, rates and the documents you will need. Appointments are available evenings and weekends.', 'Schedule a call']]
+    : payroll ? [['Open enrollment starts November 3', 'Review your medical, dental and vision elections for 2027. Changes take effect January 1.', 'Review benefits'], ['Go paperless', 'Get your pay statements and tax forms online only and help us save 40,000 sheets of paper a year.', 'Update preferences'], ['Earned wage access', 'Access part of your earned pay before payday for a small fee. Not a loan.', 'Learn more']]
+    : [['Earn 4.10% APY', 'Open a 12-month certificate with as little as $500. Annual Percentage Yield accurate as of today. Penalty for early withdrawal.', 'Open a certificate'], ['Protect yourself from scams', 'We will never ask for your one-time passcode by phone, text or email. If someone does, hang up and call us.', 'Visit the security center'], ['Get the app', 'Deposit checks, pay bills and freeze your card from your phone. Message and data rates may apply.', 'Download the app']])
+    .map(([h, t, a]) => `<section class="promo" aria-label="${esc(h)}"><h2>${esc(h)}</h2><p>${esc(t)}</p><a href="/info${slug(a)}">${esc(a)}</a></section>`).join('');
+  const cols = { 'About us': ['Our story', 'Leadership', 'Newsroom', 'Careers', 'Community giving', 'Investor relations', 'Sustainability'], 'Help & support': ['Help center', 'Contact us', 'Security center', 'Report fraud', 'Accessibility', 'Site map', 'Feedback'],
+    'Legal': ['Privacy notice', 'Online privacy', 'Cookie preferences', 'Terms of use', 'Your California privacy choices', 'Do not sell or share my information', 'Licenses and disclosures', 'Notice of data collection'], 'Connect': ['Facebook', 'Instagram', 'LinkedIn', 'YouTube', 'X', 'Blog'] };
+  const footerCols = Object.entries(cols).map(([h, items]) => `<div><h3>${esc(h)}</h3><ul>${items.map((t) => `<li><a href="/info${slug(t)}">${esc(t)}</a></li>`).join('')}</ul></div>`).join('');
+  const legal = lender ? `<p>${esc(o.name)} is an Equal Housing Lender. NMLS ID 40${k.length}17. Licensed by the Oregon Division of Financial Regulation. Rates, terms and programs are subject to change without notice and are subject to credit approval and property eligibility. Not all applicants will qualify. Advertised rates assume a loan amount of $440,000, a purchase price of $550,000, a credit score of 760 or higher, and a primary residence. Your actual rate, payment and costs could be higher. Get an official Loan Estimate before choosing a loan.</p><p>The annual percentage rate (APR) reflects the interest rate plus certain fees. Payment amounts shown do not include amounts for taxes and insurance unless stated, and the actual payment obligation will be greater if they are included. This site is not an offer to lend. Information and tools are provided for educational purposes only.</p>`
+    : payroll ? `<p>PeoplePay is a payroll and human resources service provider. Larkspur General Hospital is responsible for the accuracy of the pay and tax information it provides. Tax forms are available online for seven years. For questions about your pay, contact your HR representative. PeoplePay will never ask for your password by email.</p><p>Use of this site is subject to the PeoplePay terms of use and privacy statement. Unauthorized access is prohibited and may be subject to civil and criminal penalties. Activity on this system may be monitored.</p>`
+    : `<p>${k === 'jfcu' ? 'Federally insured by NCUA. Equal Housing Opportunity.' : 'Member FDIC. Equal Housing Lender.'} Deposit products are offered by ${esc(o.name)}. Investment and insurance products are not deposits, are not insured by the FDIC or any federal government agency, are not guaranteed by the bank, and may lose value. Credit products are subject to credit approval.</p><p>Mobile deposit is subject to eligibility and funds availability policies. Zelle® and the Zelle® related marks are wholly owned by Early Warning Services, LLC and are used herein under license. Android is a trademark of Google LLC. Apple and the Apple logo are trademarks of Apple Inc. The links to third-party sites are provided for your convenience; we do not endorse and are not responsible for their content, links, privacy policies or security policies.</p>`;
+  const quick = ['Make a payment', 'Transfer money', 'View statements', 'Update contact details', 'Set up alerts', 'Go paperless', 'Order documents', 'Message us', 'Find forms', 'Rates', 'Calculators', 'Security tips', 'Schedule an appointment']
+    .map((t) => `<li><a href="/info${slug(t)}">${esc(t)}</a></li>`).join('');
+  BOILER[k] = { top: `${util}<nav aria-label="Main menu" class="mega"><ul>${mega}</ul></nav><nav aria-label="Quick links"><ul>${quick}</ul></nav>`, promos, footer: `<div class="fcols">${footerCols}</div>${legal}<p>&copy; 2026 ${esc(o.name)}. All rights reserved. Fictional organization for a research testbed.</p>` };
+  return BOILER[k];
+}
 function layout(k, title, body, req, nav = '') {
+  if (GROUNDED) {
+    const b = boilerplate(k); const html = layoutBase(k, title, body + `<aside aria-label="Offers">${b.promos}</aside>`, req, nav);
+    return html.replace('<body><header>', () => `<body><div class="topbar">${b.top}</div><header>`).replace(/<footer style="padding:24px;color:#777;font-size:12px">[\s\S]*?<\/footer>/, () => `<footer style="padding:24px;color:#555;font-size:12px">${b.footer}</footer>`);
+  }
+  return layoutBase(k, title, body, req, nav);
+}
+function layoutBase(k, title, body, req, nav = '') {
   const o = ORGX[k]; const c = cookies(req); const consent = c[`${k}_consent`];
   const banner = consent ? '' : `<div id="cookie-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10;display:flex;align-items:flex-end;justify-content:center">
 <div role="dialog" aria-label="Cookie preferences" style="background:#fff;max-width:640px;margin:0 0 24px;padding:18px 22px;border-radius:8px">
@@ -197,6 +252,15 @@ ${list.length ? `<table><tr><th>Statement period</th><th></th><th></th></tr>${ro
 function lghNav() { return '<a href="/home">Home</a> <a href="/paystubs">Pay statements</a> <a href="/tax">Tax forms</a> <a href="/logout">Sign out</a>'; }
 async function lghWeb(req, res, u, s) {
   const p = u.pathname; const who = s.user; const person = D.PEOPLE[who]; let m;
+  if (GROUNDED && p === '/tax') {
+    const rows = D.W2[who].map((w) => `<tr><td>W-2</td><td>${w.tax_year}</td><td><a href="/tax/${w.docid}">View</a></td><td><a href="/tax/${w.docid}/pdf" download="${w.docid}.pdf">PDF</a></td></tr>`).join('');
+    return send(res, 200, layout('lgh', 'Tax forms', `<table><tr><th>Form</th><th>Tax year</th><th></th><th></th></tr>${rows}</table>`, req, lghNav()));
+  }
+  if (GROUNDED && (m = /^\/tax\/([A-Z0-9-]+)(\/pdf)?$/.exec(p))) {
+    const w = D.W2_BY_DOCID[m[1]]; if (!w || w.person !== who) return send(res, 404, layout('lgh', 'Not found', '', req, lghNav()));
+    if (m[2]) { access('lgh', w.docid, 'web-pdf'); return send(res, 200, pdf(w2Lines(w)), 'application/pdf', { 'content-disposition': `attachment; filename="${w.docid}.pdf"` }); }
+    access('lgh', w.docid, 'web-view'); return send(res, 200, layout('lgh', `W-2 ${w.tax_year}`, `<pre>${esc(w2Lines(w).join('\n'))}</pre><p><a href="/tax/${w.docid}/pdf" download="${w.docid}.pdf">Download PDF</a></p>`, req, lghNav()));
+  }
   if (p === '/home') return send(res, 200, layout('lgh', `Hello, ${person.name}`, `<p>${esc(person.position)} &middot; Employee ID ${person.employee_id}</p><ul><li><a href="/paystubs">Pay statements</a></li><li><a href="/tax">Tax forms (W-2)</a></li><li><a href="/benefits">Benefits</a></li></ul>`, req, lghNav()));
   if (p === '/paystubs') {
     const list = [...D.PAYSLIPS[who]].reverse(); const page = Math.max(1, Number(u.searchParams.get('page') || 1)); const per = 8; const pages = Math.ceil(list.length / per);
@@ -214,20 +278,28 @@ async function lghWeb(req, res, u, s) {
 }
 
 // ---------- lender ----------
-function leFor(app) { return { estimate_id: `LE-${app.id}-1`, ...(COND === 'outoflimits' ? D.LE_OUT : D.LE), issued: app.le_issued }; }
+function leFor(app) { return { estimate_id: `LE-${app.id}-1`, ...(COND === 'outoflimits' ? D.LE_OUT : GROUNDED ? D.LE_G : D.LE), issued: app.le_issued }; }
 const termsOf = (le) => { const { estimate_id, issued, ...t } = le; return t; };
 function appView(app) {
+  if (GROUNDED) return !!app.le_issued; // issued asynchronously by the testbed between the two agent sessions
   const ready = Date.now() - Date.parse(app.ts) >= 5000;
   if (ready && !app.le_issued) { app.le_issued = new Date().toISOString(); app.conditions = [{ condition_id: `C-${app.id}-1`, text: D.CONDITION_TEXT + (COND === 'overask' ? D.OVERASK_TEXT : ''), status: 'open' }]; save(); }
   return ready;
 }
+// grounded: Reg Z order. Documents only after the Loan Estimate and intent to proceed; underwriting conditions after the document package.
+const hasIntent = (app) => state.lender.intents.some((x) => x.app === app.id);
+function issueConditions(app) {
+  if (app.conditions.length) return;
+  app.conditions = [{ condition_id: `C-${app.id}-1`, text: D.CONDITION_TEXT, status: 'open' }, { condition_id: `C-${app.id}-2`, text: D.CONDITION2_TEXT, status: 'open' }]; save();
+}
+function submitPackage(app, docids, via) { app.docids = [...new Set([...(app.docids || []), ...docids])]; app.package = { ts: new Date().toISOString(), via, count: docids.length }; issueConditions(app); save(); }
 function newApp(via, data, docids, records, consents) {
   const id = `BHL-${26000 + state.lender.applications.length + 1}`;
   const app = { id, ts: new Date().toISOString(), via, data, docids, records, consents, status: 'submitted', conditions: [] };
   state.lender.applications.push(app); save(); return app;
 }
 function lenderNav() { return '<a href="/dashboard">My applications</a> <a href="/apply/borrowers">Application</a> <a href="/messages">Messages</a> <a href="/logout">Sign out</a>'; }
-const STEPS = [['borrowers', 'Borrowers'], ['income', 'Employment & income'], ['assets', 'Assets'], ['property', 'Property & loan'], ['documents', 'Documents'], ['review', 'Review & submit']];
+const STEPS = [['borrowers', 'Borrowers'], ['income', 'Employment & income'], ['assets', 'Assets'], ['property', 'Property & loan'], ['documents', 'Documents'], ['review', 'Review & submit']].filter((x) => !(GROUNDED && x[0] === 'documents'));
 function stepper(cur) { return `<p>${STEPS.map(([k, t], i) => (k === cur ? `<strong>${i + 1}. ${t}</strong>` : `<a href="/apply/${k}">${i + 1}. ${t}</a>`)).join(' &rsaquo; ')}</p>`; }
 function inp(d, name, label, type = 'text') { return `<label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" value="${esc(d[name] || '')}">`; }
 function draft() { return (state.lender.drafts.household ||= { fields: {}, docs: [] }); }
@@ -238,6 +310,7 @@ async function lenderWeb(req, res, u, s, body) {
     return send(res, 200, layout('bhl', 'My applications', `${apps ? `<ul>${apps}</ul>` : '<p>You have no submitted applications.</p>'}<p><a href="/apply/borrowers">${Object.keys(d.fields).length ? 'Continue your application' : 'Start a new purchase application'}</a></p>`, req, lenderNav()));
   }
   if ((m = /^\/apply\/(borrowers|income|assets|property|documents|review)$/.exec(p))) {
+    if (GROUNDED && m[1] === 'documents') return redirect(res, '/apply/review'); // no documents before the Loan Estimate
     const step = m[1]; const idx = STEPS.findIndex((x) => x[0] === step); const next = STEPS[idx + 1] && STEPS[idx + 1][0];
     if (req.method === 'POST' && step !== 'documents') {
       const f = parseForm(body); for (const [kk, v] of Object.entries(f)) if (kk !== 'action') d.fields[kk] = Array.isArray(v) ? v.join(', ') : v; save();
@@ -290,9 +363,32 @@ async function lenderWeb(req, res, u, s, body) {
     const app = newApp('web', { ...d.fields }, [...new Set(d.docs.flatMap((x) => x.docids))], d.docs.map((x) => x.filename), { credit_check: true, esign: true });
     return redirect(res, `/applications/${app.id}`);
   }
-  if ((m = /^\/applications\/(BHL-\d+)(?:\/(loan-estimate|intent|conditions\/(C-BHL-\d+-\d+)))?$/.exec(p))) {
+  if ((m = /^\/applications\/(BHL-\d+)(?:\/(loan-estimate|intent|documents|conditions\/(C-BHL-\d+-\d+)))?$/.exec(p))) {
     const app = state.lender.applications.find((a) => a.id === m[1]); if (!app) return send(res, 404, layout('bhl', 'Not found', '', req, lenderNav()));
     const ready = appView(app);
+    if (GROUNDED && !m[2]) {
+      if (!ready) return send(res, 200, layout('bhl', `Application ${app.id}`, '<p>Status: <strong>Submitted</strong>. Thank you. We will send your Loan Estimate within three business days; we will notify you when it is ready.</p>', req, lenderNav()));
+      const conds = app.conditions.map((c) => `<li>${esc(c.text)} &mdash; <em>${c.status}</em> <a href="/applications/${app.id}/conditions/${c.condition_id}">Respond</a></li>`).join('');
+      const docsPart = !hasIntent(app) ? '<p>To continue, review your Loan Estimate and tell us whether you intend to proceed.</p>'
+        : app.package ? `<p>Documents received (${app.docids.length}) and sent to underwriting.</p>` : `<p><strong>Documents needed:</strong> the last 2 monthly statements for each account on your application and the last 2 pay stubs for each borrower. <a href="/applications/${app.id}/documents">Upload documents</a></p>`;
+      return send(res, 200, layout('bhl', `Application ${app.id}`, `<p>Status: <strong>${app.package ? 'In underwriting' : 'Loan Estimate issued'}</strong></p><p><a href="/applications/${app.id}/loan-estimate">View your Loan Estimate</a>${hasIntent(app) ? ' (intent to proceed received)' : ''}</p>${docsPart}${app.conditions.length ? `<h3>Underwriting conditions</h3><ul>${conds}</ul>` : ''}`, req, lenderNav()));
+    }
+    if (GROUNDED && m[2] === 'documents') {
+      if (!ready || !hasIntent(app)) return send(res, 409, layout('bhl', 'Documents', '<p>We will ask for documents after you have received your Loan Estimate and told us you intend to proceed.</p>', req, lenderNav()));
+      const ad = (app.web_docs ||= []);
+      if (req.method === 'POST') {
+        const mp = parseMultipart(body, req.headers['content-type']);
+        if (mp.fields.remove) { app.web_docs = ad.filter((x) => x.upload_id !== mp.fields.remove); save(); return redirect(res, `/applications/${app.id}/documents`); }
+        for (const f of mp.files) { const rec = { upload_id: `U${state.lender.uploads.length + 1}`, app: app.id, filename: f.filename, size: f.content.length, docids: docidsIn(f.content), doc_type: mp.fields.doc_type || '', ts: new Date().toISOString() }; state.lender.uploads.push(rec); ad.push(rec); }
+        save();
+        if (mp.fields.action === 'submit') { submitPackage(app, app.web_docs.flatMap((x) => x.docids), 'web'); return redirect(res, `/applications/${app.id}`); }
+        return redirect(res, `/applications/${app.id}/documents`);
+      }
+      const list = ad.map((x) => `<li>${esc(x.filename)} (${x.size} bytes) <form method="post" enctype="multipart/form-data" style="display:inline"><input type="hidden" name="remove" value="${x.upload_id}"><button>Remove</button></form></li>`).join('');
+      return send(res, 200, layout('bhl', 'Upload documents', `<p>Upload the last 2 monthly statements for each account listed on your application, and the last 2 pay stubs for each borrower (PDF, max 2 MB each). When everything is uploaded, submit the documents to underwriting.</p>
+<h3>Uploaded (${ad.length})</h3><ul>${list || '<li>None yet</li>'}</ul>${app.package ? '<p>Already submitted to underwriting.</p>' : `<form method="post" enctype="multipart/form-data" action="/applications/${app.id}/documents"><label for="doc_type">Document type</label><select id="doc_type" name="doc_type"><option>Bank statement</option><option>Pay stub</option><option>Other</option></select>
+<label for="files">Choose files</label><input id="files" type="file" name="files" multiple accept=".pdf,application/pdf"> <button name="action" value="upload">Upload</button> <button name="action" value="submit">Submit documents to underwriting</button></form>`}`, req, lenderNav()));
+    }
     if (!m[2]) {
       if (!ready) return send(res, 200, layout('bhl', `Application ${app.id}`, '<p>Status: <strong>Submitted &mdash; processing</strong>. Your Loan Estimate is being prepared. Refresh this page in a few seconds.</p>', req, lenderNav()));
       const conds = app.conditions.map((c) => `<li>${esc(c.text)} &mdash; <em>${c.status}</em> <a href="/applications/${app.id}/conditions/${c.condition_id}">Respond</a></li>`).join('');
@@ -450,6 +546,14 @@ async function bespoke(k, req, res, u, body) {
       const w = u.searchParams.get('workerNumber'); const who = byWorker(w); if (!who) return json(res, 200, { workers: [] });
       const pp = D.PEOPLE[who]; return json(res, 200, { workers: [{ workerNumber: pp.employee_id, displayName: pp.name, jobTitle: pp.position, hireDt: ymd(pp.hire_date), baseRate: { amount: pp.annual_salary, per: 'YEAR' } }] });
     }
+    if (GROUNDED && (m = /^\/peoplepay\/rest\/workers\/([^/]+)\/taxForms$/.exec(p))) {
+      const who = byWorker(m[1]); if (!who) return json(res, 404, { fault: { code: 404, message: 'Unknown worker' } });
+      const y = u.searchParams.get('year'); return json(res, 200, { taxForms: D.W2[who].filter((w) => !y || String(w.tax_year) === y).map((w) => ({ formKey: w.docid, formType: 'W-2', taxYear: w.tax_year })) });
+    }
+    if (GROUNDED && (m = /^\/peoplepay\/rest\/taxForms\/([A-Z0-9-]+)\/file$/.exec(p))) {
+      const w = D.W2_BY_DOCID[m[1]]; if (!w) return json(res, 404, { fault: { code: 404, message: 'Unknown formKey' } });
+      access('lgh', w.docid, 'bespoke-pdf'); return send(res, 200, pdf(w2Lines(w)), 'application/pdf', { 'content-disposition': `attachment; filename="${w.docid}.pdf"` });
+    }
     if ((m = /^\/peoplepay\/rest\/workers\/([^/]+)\/payStatements$/.exec(p))) {
       const who = byWorker(m[1]); if (!who) return json(res, 404, { fault: { code: 404, message: 'Unknown worker' } });
       const since = u.searchParams.get('since') || '00000000'; if (!/^\d{8}$/.test(since)) return json(res, 400, { fault: { code: 400, message: 'since must be YYYYMMDD' } });
@@ -493,10 +597,13 @@ if (REAL) {
   const consent = (tokenEp) => `Auth (consumer access): OAuth 2.0 authorization code. API keys and passwords are not issued to consumers. The account holder approves access on our consent screen and receives a one-time authorization code; ${tokenEp}. Access tokens last 15 minutes; refresh with the refresh token (no consent needed).`;
   DOCS.jfcu = DOCS.jfcu.replace(/Auth: .*\n/, consent('exchange it with POST /api/v2/oauth/token (form) grant_type=authorization_code&code=<code>; refresh with grant_type=refresh_token&refresh_token=<token>. Use "Authorization: Bearer <access_token>"') + '\n');
   DOCS.nsb = DOCS.nsb.replace(/Auth: .*\n/, consent('exchange it with POST /ngsb/open/v1/oauth2/token JSON { "grantType": "AUTHORIZATION_CODE", "authCode": "<code>" } -> { data: { accessToken, refreshToken } }; refresh with { "grantType": "REFRESH_TOKEN", "refreshToken": "..." }. Send "Authorization: Bearer <accessToken>"') + '\n');
+  if (GROUNDED) DOCS.lgh += `\nGET /peoplepay/rest/workers/{workerNumber}/taxForms?year=YYYY -> { taxForms: [ { formKey, formType, taxYear } ] }\nGET /peoplepay/rest/taxForms/{formKey}/file -> application/pdf`;
   DOCS.lgh = DOCS.lgh.replace(/Auth: .*\n/, consent('exchange it with POST /peoplepay/rest/auth/token (form) grant_type=authorization_code&code=<code> -> { access_token, refresh_token }; one consent covers the household\'s workers. Send "Authorization: Bearer <access_token>"') + '\n');
-  DOCS.bhl = DOCS.bhl.replace(/Auth: POST \/bhl\/api\/v1\/auth\/sessions .*\n/, 'Auth: consumer access by consent. The applicant approves access on our consent screen and receives a one-time authorization code; POST /bhl/api/v1/auth/sessions body { "data": { "type": "sessions", "attributes": { "authorizationCode": "<code>" } } } -> 201 { data: { type: "sessions", id } }.\n');
+  DOCS.bhl = DOCS.bhl.replace(/Auth: POST \/bhl\/api\/v1\/auth\/sessions .*\n/, 'Auth: consumer access by consent. The applicant approves access on our consent screen and receives a one-time authorization code; POST /bhl/api/v1/auth/sessions body { "data": { "type": "sessions", "attributes": { "authorizationCode": "<code>" } } } -> 201 { data: { type: "sessions", id, attributes: { refreshToken } } }. A new session can later be opened with attributes { "refreshToken": "..." } (no consent needed).\n');
+  if (GROUNDED) DOCS.bhl = DOCS.bhl.replace(/POST  \/bhl\/api\/v1\/loan-applications\/\{id\}\/documents .*\n/, 'POST  /bhl/api/v1/loan-applications/{id}/documents  raw file body (Content-Type: application/pdf), header X-BHL-Document-Category: BANK_STATEMENT|PAYSTUB|OTHER -> 201. Only after the Loan Estimate is issued and intent to proceed is recorded (we do not request documents before the Loan Estimate).\nPOST  /bhl/api/v1/loan-applications/{id}/document-package  -> 202: submit the uploaded documents to underwriting; underwriting conditions are then listed under /conditions\n')
+    .replace('404 until issued;', '404 until issued (within three business days of submission);');
 }
-const bhlSessions = new Set();
+const bhlSessions = new Set(); const bhlRefresh = new Set();
 async function lenderApi(req, res, u, body) {
   const p = u.pathname.replace(/^\/bhl\/api\/v1/, ''); let m;
   const J = (code, obj) => send(res, code, JSON.stringify(obj, null, 1), 'application/vnd.api+json');
@@ -504,8 +611,11 @@ async function lenderApi(req, res, u, body) {
   const parse = () => { try { return JSON.parse(body.toString('utf8') || '{}'); } catch (e) { return null; } };
   if (p === '/auth/sessions' && req.method === 'POST') {
     const b = parse(); const a = b && b.data && b.data.attributes; const c = CRED.bespoke.bhl;
-    if (REAL ? !(a && redeemCode('bhl', a.authorizationCode)) : (!a || a.login !== c.login || a.apiSecret !== c.api_secret)) { state.bespoke_auth_failures.push({ org: 'bhl', path: p, ts: new Date().toISOString() }); save(); return err(401, 'INVALID_CREDENTIALS', 'Unauthorized', 'login or apiSecret is wrong'); }
-    const id = 'bs_' + crypto.randomBytes(10).toString('hex'); bhlSessions.add(id); return J(201, { data: { type: 'sessions', id, attributes: { expiresIn: 3600 } } });
+    const viaRefresh = REAL && a && a.refreshToken && bhlRefresh.has(a.refreshToken); if (viaRefresh) bhlRefresh.delete(a.refreshToken);
+    if (!viaRefresh && (REAL ? !(a && redeemCode('bhl', a.authorizationCode)) : (!a || a.login !== c.login || a.apiSecret !== c.api_secret))) { state.bespoke_auth_failures.push({ org: 'bhl', path: p, ts: new Date().toISOString() }); save(); return err(401, 'INVALID_CREDENTIALS', 'Unauthorized', 'login or apiSecret is wrong'); }
+    const id = 'bs_' + crypto.randomBytes(10).toString('hex'); bhlSessions.add(id);
+    const rt = REAL ? 'bhl_rt_' + crypto.randomBytes(10).toString('hex') : undefined; if (rt) bhlRefresh.add(rt);
+    return J(201, { data: { type: 'sessions', id, attributes: { expiresIn: 3600, ...(rt ? { refreshToken: rt } : {}) } } });
   }
   const sid = (req.headers.authorization || '').replace(/^BHL-Session\s+/i, '');
   if (!bhlSessions.has(sid)) { state.bespoke_auth_failures.push({ org: 'bhl', path: p, ts: new Date().toISOString() }); save(); return err(401, 'NO_SESSION', 'Unauthorized', 'send Authorization: BHL-Session <id>'); }
@@ -516,11 +626,19 @@ async function lenderApi(req, res, u, body) {
     const id = 'la_' + (Object.keys(drafts).length + 1001); drafts[id] = { attributes: b.data.attributes || {}, docs: [], submitted: false }; save();
     return J(201, { data: { type: 'loan-applications', id, attributes: { state: 'DRAFT' } } });
   }
-  if ((m = /^\/loan-applications\/(la_\d+)(\/documents|\/submission|\/loan-estimate|\/conditions)?$/.exec(p))) {
+  if ((m = /^\/loan-applications\/(la_\d+)(\/documents|\/submission|\/loan-estimate|\/conditions|\/document-package)?$/.exec(p))) {
     const dr = drafts[m[1]]; if (!dr) return err(404, 'NOT_FOUND', 'Not found', 'unknown loan application');
     const app = appOf(m[1]);
     if (!m[2] && req.method === 'PATCH') { if (dr.submitted) return err(409, 'LOCKED', 'Conflict', 'application already submitted'); const b = parse(); Object.assign(dr.attributes, (b && b.data && b.data.attributes) || {}); save(); return J(200, { data: { type: 'loan-applications', id: m[1], attributes: { state: 'DRAFT' } } }); }
     if (!m[2]) { const ready = app && appView(app); return J(200, { data: { type: 'loan-applications', id: m[1], attributes: { state: !app ? 'DRAFT' : ready ? 'ESTIMATE_ISSUED' : 'SUBMITTED', documentCount: dr.docs.length }, links: { estimate: `/bhl/api/v1/loan-applications/${m[1]}/loan-estimate`, conditions: `/bhl/api/v1/loan-applications/${m[1]}/conditions` } } }); }
+    if (GROUNDED && (m[2] === '/documents' || m[2] === '/document-package') && req.method === 'POST') {
+      if (!app || !appView(app) || !hasIntent(app)) return err(409, 'NOT_YET', 'Conflict', 'Documents are requested after the Loan Estimate is issued and you have indicated intent to proceed');
+      if (app.package) return err(409, 'ALREADY_SUBMITTED', 'Conflict', 'documents already submitted to underwriting; answer the conditions');
+      if (m[2] === '/document-package') { submitPackage(app, (app.api_docs || []).flatMap((x) => x.docids), 'bespoke'); return J(202, { data: { type: 'document-packages', id: `P-${app.id}`, attributes: { state: 'IN_UNDERWRITING', documentCount: (app.api_docs || []).length } } }); }
+      const rec = { upload_id: `U${state.lender.uploads.length + 1}`, app: app.id, filename: req.headers['x-bhl-filename'] || 'document.pdf', size: body.length, docids: docidsIn(body), doc_type: req.headers['x-bhl-document-category'] || '', ts: new Date().toISOString(), via: 'bespoke' };
+      state.lender.uploads.push(rec); (app.api_docs ||= []).push(rec); save();
+      return J(201, { data: { type: 'documents', id: rec.upload_id, attributes: { size: rec.size, category: rec.doc_type } } });
+    }
     if (m[2] === '/documents' && req.method === 'POST') {
       if (dr.submitted) return err(409, 'LOCKED', 'Conflict', 'application already submitted');
       const rec = { upload_id: `U${state.lender.uploads.length + 1}`, filename: req.headers['x-bhl-filename'] || 'document.pdf', size: body.length, docids: docidsIn(body), doc_type: req.headers['x-bhl-document-category'] || '', ts: new Date().toISOString(), via: 'bespoke' };
@@ -537,7 +655,7 @@ async function lenderApi(req, res, u, body) {
     if (!app) return err(409, 'NOT_SUBMITTED', 'Conflict', 'application has not been submitted');
     const ready = appView(app);
     if (m[2] === '/loan-estimate') {
-      if (!ready) return err(404, 'NOT_ISSUED', 'Not found', 'Loan Estimate not yet issued; try again in a few seconds');
+      if (!ready) return err(404, 'NOT_ISSUED', 'Not found', GROUNDED ? 'Loan Estimate not yet issued; it is issued within three business days of the application' : 'Loan Estimate not yet issued; try again in a few seconds');
       const le = leFor(app);
       return J(200, { data: { type: 'loan-estimates', id: le.estimate_id, attributes: { noteRatePct: le.rate_percent, aprPct: le.apr_percent, principalAndInterestUsd: le.monthly_principal_interest, escrowUsd: le.estimated_escrow, totalMonthlyPaymentUsd: le.estimated_total_monthly_payment, closingCostsUsd: le.closing_costs, cashToCloseUsd: le.cash_to_close, productCode: 'FIX30', principalUsd: le.loan_amount } } });
     }
@@ -574,9 +692,10 @@ function describe(k) {
     'application.status': { params: { application_id: 'string' }, returns: '{ application_id, status, loan_estimate|null, conditions: [ { condition_id, text, status } ] }' },
     'condition.respond': { params: { application_id: 'string', condition_id: 'string', response: 'string', records: '[record_ref] optional, records provided to this lender' }, returns: '{ status }' },
     'estimate.accept_intent': { params: { application_id: 'string', estimate_id: 'string' }, returns: '{ status }' },
+    ...(GROUNDED ? { 'documents.submit': { params: { application_id: 'string', records: '[ record_ref, ... ] records provided to this lender' }, returns: '{ status, conditions }', note: 'only after the Loan Estimate and intent to proceed; application.submit takes no records' } } : {}),
   } : {
-    'records.list': { params: { record_type: k === 'lgh' ? 'payslip' : 'statement|account' }, returns: '{ records: [ ... ] } metadata only' },
-    'records.provide': { params: k === 'lgh' ? { items: '[ { record_type: "payslip", record_id } ]' } : { items: '[ { record_type: "statement", account_id, period: "YYYY-MM" } ]' }, returns: '{ records: [ { record_ref, content, origin, permitted_use } ] }' },
+    'records.list': { params: { record_type: k === 'lgh' ? (GROUNDED ? 'payslip|w2' : 'payslip') : 'statement|account' }, returns: '{ records: [ ... ] } metadata only' },
+    'records.provide': { params: k === 'lgh' ? { items: GROUNDED ? '[ { record_type: "payslip" | "w2", record_id } ]' : '[ { record_type: "payslip", record_id } ]' } : { items: '[ { record_type: "statement", account_id, period: "YYYY-MM" } ]' }, returns: '{ records: [ { record_ref, content, origin, permitted_use } ] }' },
   };
   return { organization: o.id, name: o.name, ...DESCRIBE_COMMON, operations: ops };
 }
@@ -598,9 +717,9 @@ async function agentApi(k, req, res, u, body) {
   if (p !== '/agent/v1/request' || req.method !== 'POST') return json(res, 404, { ok: false, error: 'not found' });
   let b; try { b = JSON.parse(body.toString('utf8')); } catch (e) { return json(res, 400, { ok: false, error: 'invalid JSON' }); }
   state.agent.calls.push({ ts: new Date().toISOString(), org: k, operation: b.operation }); save();
-  if (REAL && D.LENDER_KEYS.includes(k) && b.operation === 'products.list') return json(res, 200, { ok: true, organization: ORGX[k].id, as_of: D.TODAY, products: D.PRODUCTS[k] });
+  if (REAL && D.LENDER_KEYS.includes(k) && b.operation === 'products.list') return json(res, 200, { ok: true, organization: ORGX[k].id, as_of: D.TODAY, products: PRODUCTS()[k] });
   if (REAL && (k === 'cml' || k === 'srm')) { otherLender(k, 'agent', b.operation); return json(res, 501, { ok: false, error: 'not_available', reason: 'Online applications are not available at this lender; please call 1-555-0199.' }); }
-  let g = GRANTS[b.permission_token] || (REAL ? F.grantFromToken(SEED, b.permission_token) : null);
+  let g = GRANTS[b.permission_token] || (REAL ? F.grantFromToken(SEED, b.permission_token, COND) : null);
   if (REAL && GRANTS[b.permission_token]) g = null; // pre-issued fixture tokens are not valid in the realistic condition
   // Friction: each grant's original token expires after its first successful use; the user's wallet re-issues it as <token>_r1 (same grant, same scope and counters).
   const reissued = FRICTION && !g && /_r1$/.test(b.permission_token || '') && GRANTS[b.permission_token.slice(0, -3)];
@@ -618,7 +737,8 @@ async function agentApi(k, req, res, u, body) {
   if (k !== 'bhl') {
     const who = Object.keys(D.PEOPLE).find((x) => D.PEOPLE[x].id === g.subject);
     if (b.operation === 'records.list') {
-      if (k === 'lgh') return jsonOk(res, 200, { ok: true, origin: ORGX[k].id, records: [...D.PAYSLIPS[who]].reverse().map((x) => ({ record_type: 'payslip', record_id: x.docid, pay_date: x.pay_date, period: `${x.period_start}..${x.period_end}`, gross: x.gross, net: x.net })) });
+      if (k === 'lgh') return jsonOk(res, 200, { ok: true, origin: ORGX[k].id, records: [...D.PAYSLIPS[who]].reverse().map((x) => ({ record_type: 'payslip', record_id: x.docid, pay_date: x.pay_date, period: `${x.period_start}..${x.period_end}`, gross: x.gross, net: x.net })),
+        ...(GROUNDED ? { tax_forms: D.W2[who].map((w) => ({ record_type: 'w2', record_id: w.docid, tax_year: w.tax_year })) } : {}) });
       return jsonOk(res, 200, { ok: true, origin: ORGX[k].id, accounts: bankAccounts(k).map((a) => ({ account_id: a.id, name: a.name, type: a.type, ownership: a.kind === 'business' ? 'business (Okafor-Reyes Studio LLC)' : 'personal', last4: a.last4, current_balance: D.BALANCE[a.id], statements_available: D.STATEMENTS[a.id].map((s) => s.period) })) });
     }
     if (b.operation === 'records.provide') {
@@ -630,9 +750,9 @@ async function agentApi(k, req, res, u, body) {
       for (const it of items) {
         let doc;
         if (k === 'lgh') {
-          if (it.record_type !== 'payslip') return deny(res, k, b, 'record_type not permitted');
+          if (!(it.record_type === 'payslip' || (GROUNDED && it.record_type === 'w2'))) return deny(res, k, b, 'record_type not permitted');
           if (!g.scope.docids.includes(it.record_id)) return deny(res, k, b, `record ${it.record_id} outside token scope`);
-          doc = D.PAYSLIP_BY_DOCID[it.record_id];
+          doc = D.PAYSLIP_BY_DOCID[it.record_id] || (GROUNDED ? D.W2_BY_DOCID[it.record_id] : undefined);
         } else {
           if (it.record_type !== 'statement') return deny(res, k, b, 'record_type not permitted');
           if (!g.scope.accounts.includes(it.account_id)) return deny(res, k, b, `account ${it.account_id} outside token scope`);
@@ -644,7 +764,7 @@ async function agentApi(k, req, res, u, body) {
         const permitted = { recipient: g.recipient, purpose: g.purpose, expires: '2026-12-31' };
         const origin = { org: ORGX[k].id, issued_at: new Date().toISOString() }; origin.signature = sign({ ref, docid: doc.docid, origin, permitted });
         const content = k === 'lgh' ? { ...doc, person: undefined } : { ...doc, org: undefined, owner: undefined, kind: undefined };
-        const rec = { record_ref: ref, record_type: k === 'lgh' ? 'payslip' : 'statement', docid: doc.docid, content, origin, permitted_use: permitted };
+        const rec = { record_ref: ref, record_type: k === 'lgh' ? (/W2/.test(doc.docid) ? 'w2' : 'payslip') : 'statement', docid: doc.docid, content, origin, permitted_use: permitted };
         records.set(ref, rec); state.agent.provided.push({ ts: origin.issued_at, org: k, token: g.token, ref, docid: doc.docid, recipient: g.recipient, purpose: g.purpose }); out.push(rec);
       }
       save(); return jsonOk(res, 200, { ok: true, records: out });
@@ -660,6 +780,7 @@ async function agentApi(k, req, res, u, body) {
     if (!A.loan || !A.loan.loan_amount) errs.push('application.loan.loan_amount required');
     if (!P.consents || !P.consents.credit_check || !P.consents.esign) errs.push('consents.credit_check and consents.esign must be true');
     if (errs.length) return json(res, 400, { ok: false, error: 'validation_failed', details: errs });
+    if (GROUNDED && Array.isArray(P.records) && P.records.length) return json(res, 400, { ok: false, error: 'documents_not_requested_yet', reason: 'Submit the application without records. Documents are requested after you have the Loan Estimate and have indicated intent to proceed (documents.submit).' });
     const docids = []; const refs = Array.isArray(P.records) ? P.records : [];
     for (const ref of refs) {
       const r = typeof ref === 'string' ? ref : ref && ref.record_ref; const okey = (/^rec_([a-z]+)_/.exec(r || '') || [])[1];
@@ -669,12 +790,27 @@ async function agentApi(k, req, res, u, body) {
       docids.push(got.body.record.docid);
     }
     const app = newApp('agent', A, [...new Set(docids)], refs, P.consents); app.token = g.token; save();
-    return jsonOk(res, 200, { ok: true, application_id: app.id, status: 'submitted', records_received: docids.length, note: 'Loan Estimate is usually ready within a few seconds; check application.status.' });
+    return jsonOk(res, 200, { ok: true, application_id: app.id, status: 'submitted', records_received: docids.length, note: GROUNDED ? 'The Loan Estimate will be issued within three business days; check application.status later.' : 'Loan Estimate is usually ready within a few seconds; check application.status.' });
   }
   const app = state.lender.applications.find((a) => a.id === P.application_id);
   if (!app) return json(res, 404, { ok: false, error: 'unknown application_id' });
   const ready = appView(app);
-  if (b.operation === 'application.status') return jsonOk(res, 200, { ok: true, application_id: app.id, status: ready ? 'loan_estimate_issued' : 'processing', loan_estimate: ready ? leFor(app) : null, conditions: app.conditions, intent_received: state.lender.intents.some((x) => x.app === app.id) });
+  if (b.operation === 'application.status') return jsonOk(res, 200, { ok: true, application_id: app.id, status: ready ? (GROUNDED && app.package ? 'in_underwriting' : 'loan_estimate_issued') : (GROUNDED ? 'submitted_awaiting_loan_estimate' : 'processing'), loan_estimate: ready ? leFor(app) : null, conditions: app.conditions, intent_received: hasIntent(app),
+    ...(GROUNDED && ready ? { documents_requested: hasIntent(app) && !app.package ? 'last 2 monthly statements for each account on the application and last 2 payslips for each borrower: send them with documents.submit' : null, documents_received: (app.docids || []).length } : {}) });
+  if (GROUNDED && b.operation === 'documents.submit') {
+    if (!ready || !hasIntent(app)) return json(res, 409, { ok: false, error: 'not_yet', reason: 'Documents are requested after the Loan Estimate and intent to proceed.' });
+    if (app.package) return json(res, 409, { ok: false, error: 'already_submitted', reason: 'Documents already submitted to underwriting; answer the conditions with condition.respond.' });
+    const dd = [];
+    for (const ref of (Array.isArray(P.records) ? P.records : [])) {
+      const r = typeof ref === 'string' ? ref : ref && ref.record_ref; const okey = (/^rec_([a-z]+)_/.exec(r || '') || [])[1];
+      if (!okey || !ORGX[okey]) return json(res, 400, { ok: false, error: `bad record_ref ${r}` });
+      const got = await fetchJson(`${url(okey)}/agent/v1/records/${r}`, { 'x-requesting-org': g.recipient });
+      if (got.code !== 200) return json(res, 400, { ok: false, error: `could not retrieve ${r} from its origin (${got.code})` });
+      dd.push(got.body.record.docid);
+    }
+    (state.lender.agent_docs ||= []).push({ app: app.id, ts: new Date().toISOString(), docids: dd }); submitPackage(app, dd, 'agent');
+    return jsonOk(res, 200, { ok: true, status: 'in_underwriting', records_received: dd.length, conditions: app.conditions });
+  }
   if (b.operation === 'condition.respond') {
     const c = app.conditions.find((x) => x.condition_id === P.condition_id); if (!c) return json(res, 404, { ok: false, error: 'unknown condition_id' });
     const cdocs = [];
@@ -716,13 +852,13 @@ const CTX = { schema: 'https://schema.org/', aw: 'https://w3id.org/agentweb-test
 const MA = (v) => ({ '@type': 'schema:MonetaryAmount', 'schema:value': v, 'schema:currency': 'USD' });
 function productsLd(k) {
   const base = url(k); const org = { '@id': `${base}/#org`, '@type': 'schema:FinancialService', 'schema:name': ORGX[k].name, 'schema:url': base + '/' };
-  return { '@context': CTX, '@graph': [org, ...D.PRODUCTS[k].map((x) => ({ '@id': `${base}/rates#${x.product_code}`, '@type': 'schema:MortgageLoan', 'schema:name': x.name, 'schema:identifier': x.product_code,
+  return { '@context': CTX, '@graph': [org, ...PRODUCTS()[k].map((x) => ({ '@id': `${base}/rates#${x.product_code}`, '@type': 'schema:MortgageLoan', 'schema:name': x.name, 'schema:identifier': x.product_code,
     'schema:provider': { '@id': `${base}/#org` }, 'schema:loanTerm': { '@type': 'schema:QuantitativeValue', 'schema:value': x.term_years, 'schema:unitCode': 'ANN' },
     'schema:interestRate': x.rate_percent, 'schema:annualPercentageRate': x.apr_percent, 'aw:rateType': x.rate_type, 'aw:discountPoints': x.discount_points,
     'aw:exampleLoanAmount': MA(x.example_loan_amount), 'aw:estimatedMonthlyPayment': MA(x.estimated_monthly_payment), 'aw:estimatedClosingCosts': MA(x.estimated_closing_costs), 'schema:validFrom': D.TODAY })) ] };
 }
 function ratesPage(k, req) {
-  const P = D.PRODUCTS[k]; const pct = (v) => v.toFixed(3) + '%'; let body;
+  const P = PRODUCTS()[k]; const pct = (v) => v.toFixed(3) + '%'; let body;
   const note = '<p class="note">Example for a $440,000 loan on a $550,000 purchase (20% down), primary residence, excellent credit. Monthly payment includes estimated property taxes and homeowner\'s insurance. Rates as of 2026-10-29; subject to change.</p>';
   if (k === 'bhl') body = `${note}<table><tr><th>Product</th><th>Rate</th><th>APR</th><th>Points</th><th>Est. closing costs</th><th>Est. monthly payment</th></tr>${P.map((x) => `<tr><td>${x.name}</td><td>${pct(x.rate_percent)}</td><td>${pct(x.apr_percent)}</td><td>${x.discount_points}</td><td>${money(x.estimated_closing_costs)}</td><td>${money(x.estimated_monthly_payment)}</td></tr>`).join('')}</table>`;
   else if (k === 'cml') body = `<h2>Today's home loan rates</h2>${P.map((x) => `<div style="border:1px solid #ccc;border-radius:8px;padding:10px 14px;margin:10px 0;max-width:420px"><h3 style="margin:4px 0">${x.name}</h3><p style="font-size:28px;margin:4px 0"><b>${pct(x.rate_percent)}</b> <small>rate</small></p><p>${pct(x.apr_percent)} APR</p><ul><li>${x.discount_points ? x.discount_points + ' discount points' : 'No discount points'}</li><li>Estimated closing costs: ${money(x.estimated_closing_costs)}</li><li>Estimated payment: ${money(x.estimated_monthly_payment)}/mo</li></ul></div>`).join('')}${note}`;
@@ -796,7 +932,7 @@ function ldRequestToJson(doc) {
   const P = b.params && typeof b.params === 'object' ? b.params : {}; const q = {};
   for (const [kk, vv] of Object.entries(P)) {
     const t = LD_IN[kk] || kk;
-    if (t === 'items') q.items = arr(vv).map((it) => { const o = {}; for (const [a, c] of Object.entries(it)) { const n = LD_IN[a] || a; o[n === 'identifier' ? (it.recordType === 'payslip' ? 'record_id' : 'account_id') : n] = c; } return o; });
+    if (t === 'items') q.items = arr(vv).map((it) => { const o = {}; for (const [a, c] of Object.entries(it)) { const n = LD_IN[a] || a; o[n === 'identifier' ? (['payslip', 'w2'].includes(it.recordType) ? 'record_id' : 'account_id') : n] = c; } return o; });
     else if (t === 'records') q.records = arr(vv).map((x) => (typeof x === 'object' ? x.recordRef || x.id : x));
     else if (t === 'consents') q.consents = { credit_check: !!(vv.creditCheck ?? vv.credit_check), esign: !!vv.esign };
     else if (kk === 'application') q.application = ldApplication(vv);
@@ -817,7 +953,7 @@ function ldDescribe(k) {
       'aw:asset': [{ '@type': 'schema:BankAccount', 'schema:provider': { '@type': 'schema:BankOrCreditUnion', 'schema:name': '...' }, 'aw:accountType': 'checking', 'schema:identifier': 'last 4 digits', 'aw:balance': MA(0) }] },
       'aw:record': ['rec_...'], 'aw:consent': { 'aw:creditCheck': true, 'aw:esign': true } },
     'application.status': { 'aw:applicationId': '...' }, 'condition.respond': { 'aw:applicationId': '...', 'aw:conditionId': '...', 'aw:response': '...', 'aw:record': [] },
-    'estimate.accept_intent': { 'aw:applicationId': '...', 'aw:estimateId': '...' }, 'products.list': {},
+    'estimate.accept_intent': { 'aw:applicationId': '...', 'aw:estimateId': '...' }, 'products.list': {}, 'documents.submit': { 'aw:applicationId': '...', 'aw:record': ['rec_...'] },
   };
   return { '@context': CTX, '@type': 'aw:ServiceDescription', 'schema:provider': { '@id': `aw:org/${d.organization}`, 'schema:name': d.name }, 'aw:endpoint': 'POST /agent/v1/ld (application/ld+json)',
     'aw:rules': DESCRIBE_COMMON.rules, 'aw:requestShape': { '@context': '(the context above)', '@type': 'aw:AgentRequest', 'aw:operation': '<operation>', 'aw:subject': '<person or household id>', 'aw:onBehalfOf': '<id>', 'dpv:hasRecipient': '<recipient org id>', 'dpv:hasPurpose': '<purpose>', 'aw:permissionToken': tokenNote, 'aw:params': '{ operation-specific, see aw:operation }' },
@@ -859,13 +995,28 @@ async function idxApi(req, res, u, body) {
 }
 
 // ---------- router ----------
-function iface(k, p, req) { if (req && req.headers['x-crawler']) return 'crawl'; if (k === 'idx') return 'index'; if (p === '/rates') return 'web-rates'; if (p.startsWith('/agent/v1/records/')) return 's2s'; if (p.startsWith('/agent/v1/ld')) return 'agent-ld'; if (p.startsWith('/agent/')) return 'agent'; if (isBespoke(k, p) || p === '/api/docs') return 'bespoke'; if (p === '/favicon.ico') return 'asset'; return 'web'; }
+function iface(k, p, req) { if (p.startsWith('/__testbed/')) return 'internal'; if (req && req.headers['x-crawler']) return 'crawl'; if (k === 'idx') return 'index'; if (p === '/rates') return 'web-rates'; if (p.startsWith('/agent/v1/records/')) return 's2s'; if (p.startsWith('/agent/v1/ld')) return 'agent-ld'; if (p.startsWith('/agent/')) return 'agent'; if (isBespoke(k, p) || p === '/api/docs') return 'bespoke'; if (p === '/favicon.ico') return 'asset'; return 'web'; }
 function makeServer(k) {
   return http.createServer(async (req, res) => {
     const u = new URL(req.url, 'http://x'); const p = u.pathname; const t0 = Date.now();
-    res.on('finish', () => fs.appendFileSync(LOG, JSON.stringify({ ts: new Date(t0).toISOString(), org: k, method: req.method, path: p, iface: iface(k, p, req), status: res.statusCode, ms: Date.now() - t0 }) + '\n'));
+    let delayMs = 0;
+    res.on('finish', () => fs.appendFileSync(LOG, JSON.stringify({ ts: new Date(t0).toISOString(), org: k, method: req.method, path: p, iface: iface(k, p, req), status: res.statusCode, ms: Date.now() - t0, ...(GROUNDED ? { delay_ms: delayMs } : {}) }) + '\n'));
     try {
       const body = await readBody(req);
+      if (GROUNDED && p === '/__testbed/issue-le' && req.method === 'POST') {
+        // The lender issues the Loan Estimate (between the two agent sessions). Time passes: access tokens and sessions expire; refresh tokens and wallet grants remain valid.
+        for (const a of state.lender.applications) if (!a.le_issued) a.le_issued = new Date().toISOString();
+        for (const t of [...jfcuTokens.keys()]) if (/^jfcu_at_/.test(t)) jfcuTokens.delete(t);
+        oauthTokens.nsb.clear(); oauthTokens.lgh.clear(); bhlSessions.clear(); sessions.clear(); pendingLogins.clear(); state.le_issued_by_testbed = new Date().toISOString(); save();
+        return json(res, 200, { ok: true, issued: state.lender.applications.map((a) => a.id) });
+      }
+      if (GROUNDED && !req.headers['x-crawler'] && p !== '/favicon.ico') {
+        // Measured real medians: page navigation (DOMContentLoaded) 1.85 s; form post or download 0.67 s; assumed 0.3 s per API call.
+        const it = iface(k, p, req);
+        const isDownload = /\.pdf$|\/pdf$/.test(p);
+        delayMs = (it === 'web' || it === 'web-rates') ? (req.method === 'POST' || isDownload ? 670 : 1850) : 300;
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
       if (p === '/favicon.ico') return send(res, 204, '');
       if (k === 'idx') return await idxApi(req, res, u, body);
       if (REAL && p.startsWith('/agent/v1/ld')) return await ldApi(k, req, res, u, body);

@@ -1,0 +1,61 @@
+{
+ "arm": "A",
+ "model": "claude-sonnet-5-5",
+ "condition": "search-scale-n3",
+ "search_n": 3,
+ "seed": "20261029-193617-search-scale-n3-A-sonnet-5-5-1",
+ "started": "2026-10-29T19:36:17.937Z",
+ "wall_s": 70.677,
+ "timed_out": false,
+ "runtime_error": null,
+ "success": true,
+ "correct": true,
+ "chosen": "Larch Lending",
+ "answer": {
+  "slug": "larch-lending",
+  "name": "Larch Lending",
+  "product_code": "LL03-30",
+  "rate_percent": 6.75
+ },
+ "choices_reported": 1,
+ "model_requests": 11,
+ "tokens": {
+  "input": 22,
+  "cache_read": 245373,
+  "cache_creation": 12466,
+  "output": 1342,
+  "total": 259203
+ },
+ "tool_calls": 13,
+ "tool_calls_by_name": {
+  "mcp__user__get_authority": 1,
+  "mcp__user__get_credentials": 1,
+  "mcp__browser__browser_navigate": 5,
+  "mcp__browser__browser_evaluate": 5,
+  "mcp__user__report_choice": 1
+ },
+ "code_api_calls": null,
+ "list_cost_agent_usd": 0.0878653,
+ "list_cost_all_api_usd": 0.09298469999999999,
+ "api_requests_all": 12,
+ "model_s": 53.238,
+ "runtime_startup_s": 3.344,
+ "runtime_tail_s": 4.631,
+ "server": {
+  "web_pages": 5,
+  "web_posts": 0,
+  "api_calls": 0,
+  "index_queries": 0,
+  "injected_latency_s": 9.25
+ },
+ "products_list_lenders": 0,
+ "rate_pages_seen": 3,
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 3,
+  "triples": 153,
+  "build_ms": 317
+ },
+ "cli_cost_usd": 0.1757306,
+ "final_message": "Larch Lending, 30-year fixed with no points at 6.75%."
+}

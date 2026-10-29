@@ -1,0 +1,60 @@
+{
+ "arm": "C1",
+ "model": "claude-sonnet-5-5",
+ "condition": "search-scale-n10",
+ "search_n": 10,
+ "seed": "20261029-193823-search-scale-n10-C1-sonnet-5-5-3",
+ "started": "2026-10-29T19:38:24.115Z",
+ "wall_s": 31.417,
+ "timed_out": false,
+ "runtime_error": null,
+ "success": true,
+ "correct": true,
+ "chosen": "Evergreen Funding",
+ "answer": {
+  "slug": "evergreen-funding",
+  "name": "Evergreen Funding",
+  "product_code": "EF06-30",
+  "rate_percent": 7
+ },
+ "choices_reported": 1,
+ "model_requests": 5,
+ "tokens": {
+  "input": 10,
+  "cache_read": 67392,
+  "cache_creation": 7800,
+  "output": 1877,
+  "total": 77079
+ },
+ "tool_calls": 14,
+ "tool_calls_by_name": {
+  "mcp__user__get_credentials": 1,
+  "mcp__user__get_authority": 1,
+  "mcp__search__agent_request": 11,
+  "mcp__user__report_choice": 1
+ },
+ "code_api_calls": null,
+ "list_cost_agent_usd": 0.0567292,
+ "list_cost_all_api_usd": 0.0605766,
+ "api_requests_all": 6,
+ "model_s": 28.665,
+ "runtime_startup_s": 1.233,
+ "runtime_tail_s": 3.435,
+ "server": {
+  "web_pages": 0,
+  "web_posts": 0,
+  "api_calls": 11,
+  "index_queries": 0,
+  "injected_latency_s": 3.3
+ },
+ "products_list_lenders": 10,
+ "rate_pages_seen": 0,
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 10,
+  "triples": 510,
+  "build_ms": 266
+ },
+ "cli_cost_usd": 0.1134584,
+ "final_message": "Evergreen Funding: 30-Year Fixed at 7.0%, with a $3,411.33 monthly payment and $12,900 in closing costs."
+}

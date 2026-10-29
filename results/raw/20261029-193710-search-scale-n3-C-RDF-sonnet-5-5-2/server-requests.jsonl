@@ -1,0 +1,4 @@
+{"ts":"2026-10-29T19:37:10.748Z","host":"127.0.0.1:7301","method":"GET","path":"/lenders/sandy-river-credit-union/rates","iface":"crawl","status":200,"ms":15,"delay_ms":0}
+{"ts":"2026-10-29T19:37:10.771Z","host":"127.0.0.1:7301","method":"GET","path":"/lenders/steelhead-mortgage-company/rates","iface":"crawl","status":200,"ms":1,"delay_ms":0}
+{"ts":"2026-10-29T19:37:10.779Z","host":"127.0.0.1:7301","method":"GET","path":"/lenders/larch-lending/rates","iface":"crawl","status":200,"ms":1,"delay_ms":0}
+{"ts":"2026-10-29T19:37:19.342Z","host":"127.0.0.1:7301","method":"POST","path":"/index/sparql","iface":"index","status":200,"ms":337,"delay_ms":300}

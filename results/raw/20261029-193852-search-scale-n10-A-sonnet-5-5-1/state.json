@@ -1,0 +1,20 @@
+{
+ "condition": "search-scale",
+ "N": 10,
+ "answer": {
+  "slug": "evergreen-funding",
+  "name": "Evergreen Funding",
+  "product_code": "EF06-30",
+  "rate_percent": 7
+ },
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 10,
+  "triples": 510,
+  "build_ms": 296
+ },
+ "products_list_calls": {},
+ "pages": {
+  "cedar-mortgage-group": 1
+ }
+}

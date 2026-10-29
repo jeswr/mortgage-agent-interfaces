@@ -1,0 +1,60 @@
+{
+ "arm": "C-RDF",
+ "model": "claude-sonnet-5-5",
+ "condition": "search-scale-n100",
+ "search_n": 100,
+ "seed": "20261029-194128-search-scale-n100-C-RDF-sonnet-5-5-1",
+ "started": "2026-10-29T19:41:29.381Z",
+ "wall_s": 16.96,
+ "timed_out": false,
+ "runtime_error": null,
+ "success": true,
+ "correct": true,
+ "chosen": "Crater Home Finance",
+ "answer": {
+  "slug": "crater-home-finance",
+  "name": "Crater Home Finance",
+  "product_code": "CHF18-30",
+  "rate_percent": 6.75
+ },
+ "choices_reported": 1,
+ "model_requests": 4,
+ "tokens": {
+  "input": 8,
+  "cache_read": 51305,
+  "cache_creation": 9030,
+  "output": 945,
+  "total": 61288
+ },
+ "tool_calls": 4,
+ "tool_calls_by_name": {
+  "mcp__user__get_authority": 1,
+  "mcp__user__get_credentials": 1,
+  "mcp__search__index_query": 1,
+  "mcp__user__report_choice": 1
+ },
+ "code_api_calls": null,
+ "list_cost_agent_usd": 0.0507165,
+ "list_cost_all_api_usd": 0.054933899999999994,
+ "api_requests_all": 5,
+ "model_s": 14.583,
+ "runtime_startup_s": 1.539,
+ "runtime_tail_s": 3.594,
+ "server": {
+  "web_pages": 0,
+  "web_posts": 0,
+  "api_calls": 0,
+  "index_queries": 1,
+  "injected_latency_s": 0.3
+ },
+ "products_list_lenders": 0,
+ "rate_pages_seen": 0,
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 100,
+  "triples": 4908,
+  "build_ms": 800
+ },
+ "cli_cost_usd": 0.101433,
+ "final_message": "Crater Home Finance: 30-Year Fixed at 6.75%, with a $3,338 published monthly payment and $10,000 closing costs."
+}

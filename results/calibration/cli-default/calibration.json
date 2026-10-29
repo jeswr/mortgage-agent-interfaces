@@ -1,0 +1,105 @@
+{
+ "lean": false,
+ "n": 10,
+ "median": {
+  "wall_s": 12.033,
+  "startup_s": 1.117,
+  "tail_s": 3.425,
+  "agent_model_s": 7.378,
+  "hidden_calls": 1,
+  "hidden_ms": 2890,
+  "agent_input_tokens": 10558
+ },
+ "rows": [
+  {
+   "wall_s": 14.349,
+   "startup_s": 1.117,
+   "tail_s": 7.185,
+   "agent_model_s": 6.047,
+   "hidden_calls": 1,
+   "hidden_ms": 6619,
+   "agent_input_tokens": 10558
+  },
+  {
+   "wall_s": 10.847,
+   "startup_s": 1.092,
+   "tail_s": 2.268,
+   "agent_model_s": 7.487,
+   "hidden_calls": 1,
+   "hidden_ms": 1668,
+   "agent_input_tokens": 10560
+  },
+  {
+   "wall_s": 8.098,
+   "startup_s": 1.086,
+   "tail_s": 2.756,
+   "agent_model_s": 4.256,
+   "hidden_calls": 1,
+   "hidden_ms": 2195,
+   "agent_input_tokens": 10557
+  },
+  {
+   "wall_s": 7.059,
+   "startup_s": 1.064,
+   "tail_s": 2.663,
+   "agent_model_s": 3.332,
+   "hidden_calls": 1,
+   "hidden_ms": 2090,
+   "agent_input_tokens": 10557
+  },
+  {
+   "wall_s": 21.159,
+   "startup_s": 1.099,
+   "tail_s": 3.425,
+   "agent_model_s": 16.635,
+   "hidden_calls": 1,
+   "hidden_ms": 2957,
+   "agent_input_tokens": 10555
+  },
+  {
+   "wall_s": 12.881,
+   "startup_s": 1.827,
+   "tail_s": 3.676,
+   "agent_model_s": 7.378,
+   "hidden_calls": 1,
+   "hidden_ms": 3068,
+   "agent_input_tokens": 10558
+  },
+  {
+   "wall_s": 12.033,
+   "startup_s": 1.149,
+   "tail_s": 2.329,
+   "agent_model_s": 8.555,
+   "hidden_calls": 1,
+   "hidden_ms": 1763,
+   "agent_input_tokens": 10553
+  },
+  {
+   "wall_s": 5.717,
+   "startup_s": 1.141,
+   "tail_s": 2.222,
+   "agent_model_s": 2.354,
+   "hidden_calls": 1,
+   "hidden_ms": 1226,
+   "agent_input_tokens": 10557
+  },
+  {
+   "wall_s": 14.152,
+   "startup_s": 1.075,
+   "tail_s": 5.258,
+   "agent_model_s": 7.819,
+   "hidden_calls": 1,
+   "hidden_ms": 4646,
+   "agent_input_tokens": 10558
+  },
+  {
+   "wall_s": 7.454,
+   "startup_s": 1.138,
+   "tail_s": 3.468,
+   "agent_model_s": 2.848,
+   "hidden_calls": 1,
+   "hidden_ms": 2890,
+   "agent_input_tokens": 10559
+  }
+ ]
+}

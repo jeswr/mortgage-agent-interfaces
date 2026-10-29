@@ -1,0 +1,11 @@
+{"ts":"2026-10-29T19:57:59.986Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:58:00.152Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:58:10.649Z","tool":"wallet_grant","org":"jfcu","scope":"mortgage-application:14-larch-lane: last 2 monthly statements for Sam's checking and savings","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:58:11.168Z","tool":"wallet_grant","org":"nsb","scope":"mortgage-application:14-larch-lane: last 2 monthly statements for Nadia's checking and savings","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:58:11.682Z","tool":"wallet_grant","org":"lgh","scope":"mortgage-application:14-larch-lane: last 2 payslips and 2025 W-2 for Sam and Nadia","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:58:46.003Z","tool":"wallet_grant","org":"bhl","scope":"mortgage-application:14-larch-lane: submit application, respond to conditions, accept intent to proceed; consent to credit check and e-sign","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:59:22.336Z","tool":"save_note","chars":2246}
+{"ts":"2026-10-29T19:59:34.519Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:59:34.897Z","tool":"get_credentials"}
+{"ts":"2026-10-29T20:00:57.149Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T20:00:57.154Z","tool":"ask_user","question":"Brightpath's underwriter asks about the $8,000 deposit on 2026-09-03 into Sam's Juniper FCU checking (ending 4417). What was the source of that deposit (e.g., a gift, sale, bonus, transfer)? A short written explanation is enough.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

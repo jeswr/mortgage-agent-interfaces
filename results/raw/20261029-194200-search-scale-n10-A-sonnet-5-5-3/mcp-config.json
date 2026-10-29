@@ -1,0 +1,28 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-194200-search-scale-n10-A-sonnet-5-5-3",
+    "cond=search-scale",
+    "choice"
+   ]
+  },
+  "browser": {
+   "command": "npx",
+   "args": [
+    "-y",
+    "@playwright/mcp@0.0.83",
+    "--headless",
+    "--isolated",
+    "--output-dir",
+    "./results/raw/20261029-194200-search-scale-n10-A-sonnet-5-5-3/work/downloads",
+    "--allowed-origins",
+    "http://127.0.0.1:7261;http://cedar-mortgage-group.localhost:7261;http://harbor-bank-mortgage.localhost:7261;http://cascade-mortgage-group.localhost:7261;http://pioneer-home-finance.localhost:7261;http://sandy-river-mortgage.localhost:7261;http://evergreen-funding.localhost:7261;http://timberline-home-loans.localhost:7261;http://willamette-mortgage-company.localhost:7261;http://timberline-credit-union.localhost:7261;http://alder-funding.localhost:7261",
+    "--viewport-size",
+    "1280x900"
+   ]
+  }
+ }
+}

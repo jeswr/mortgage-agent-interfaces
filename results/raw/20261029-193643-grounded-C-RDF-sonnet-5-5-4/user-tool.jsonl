@@ -1,0 +1,15 @@
+{"ts":"2026-10-29T19:36:46.656Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:36:46.669Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:37:12.717Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:37:12.724Z","tool":"approve_grant","org":"jfcu","scope":"Last 2 monthly statements of Sam's checking and savings at Juniper FCU, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:37:29.346Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:37:29.349Z","tool":"approve_grant","org":"nsb","scope":"Last 2 monthly statements of Nadia's checking and savings at Northgate, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:37:45.975Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:37:45.977Z","tool":"approve_grant","org":"lgh","scope":"Last 2 payslips each for Sam and Nadia and 2025 W-2s, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:38:02.597Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:38:02.599Z","tool":"approve_grant","org":"bhl","scope":"Submit application, credit check and e-sign consent, respond to conditions, accept intent to proceed, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:38:52.798Z","tool":"save_note","chars":1920}
+{"ts":"2026-10-29T19:39:03.922Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:39:03.935Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:40:35.896Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:40:35.902Z","tool":"ask_user","question":"Brightpath's underwriter asks for a written explanation of the $8,000.00 deposit on 09/03/2026 into Sam's Juniper FCU checking (ending 4417). What was the source of that deposit?","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

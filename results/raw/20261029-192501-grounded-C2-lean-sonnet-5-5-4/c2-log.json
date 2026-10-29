@@ -1,0 +1,73 @@
+{
+ "final_message": "Application BHL-26001 with brightpath-home-lending: intent recorded (rate 7.25%), 12 documents submitted, 2 conditions answered.",
+ "plan": [
+  {
+   "condition_id": "C-BHL-26001-1",
+   "kind": "explanation",
+   "question_for_borrowers": "Please provide a written explanation of the source of the $8,000.00 deposit made on 09/03/2026 into account ending 4417 (Sam Okafor-Reyes, Juniper FCU checking).",
+   "documents": null
+  },
+  {
+   "condition_id": "C-BHL-26001-2",
+   "kind": "documents",
+   "documents": "w2"
+  }
+ ],
+ "log": [
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "estimate.accept_intent",
+   "status": 200
+  },
+  {
+   "org": "jfcu",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "nsb",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "documents.submit",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "condition.respond",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "condition.respond",
+   "status": 200
+  }
+ ]
+}

@@ -1,0 +1,28 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-193617-search-scale-n3-A-sonnet-5-5-1",
+    "cond=search-scale",
+    "choice"
+   ]
+  },
+  "browser": {
+   "command": "npx",
+   "args": [
+    "-y",
+    "@playwright/mcp@0.0.83",
+    "--headless",
+    "--isolated",
+    "--output-dir",
+    "./results/raw/20261029-193617-search-scale-n3-A-sonnet-5-5-1/work/downloads",
+    "--allowed-origins",
+    "http://127.0.0.1:7261;http://sandy-river-credit-union.localhost:7261;http://steelhead-mortgage-company.localhost:7261;http://larch-lending.localhost:7261",
+    "--viewport-size",
+    "1280x900"
+   ]
+  }
+ }
+}

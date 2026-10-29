@@ -1,0 +1,18 @@
+{
+ "condition": "search-scale",
+ "N": 100,
+ "answer": {
+  "slug": "crater-home-finance",
+  "name": "Crater Home Finance",
+  "product_code": "CHF18-30",
+  "rate_percent": 6.75
+ },
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 100,
+  "triples": 4908,
+  "build_ms": 791
+ },
+ "products_list_calls": {},
+ "pages": {}
+}

@@ -1,0 +1,352 @@
+{
+ "seed": "20261029-190237-grounded-C2-sonnet-5-5-1",
+ "condition": "grounded",
+ "friction_events": [],
+ "started": "2026-10-29T19:02:37.814Z",
+ "consent": {},
+ "logins": {},
+ "docs_accessed": [],
+ "bespoke_auth_failures": [],
+ "agent": {
+  "provided": [
+   {
+    "ts": "2026-10-29T19:03:46.893Z",
+    "org": "lgh",
+    "token": "pt_lgh-sam_bhl_81a81e2142e9",
+    "ref": "rec_lgh_d7ce273d3e",
+    "docid": "LGH-PS-E10442-20261016",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:46.895Z",
+    "org": "lgh",
+    "token": "pt_lgh-sam_bhl_81a81e2142e9",
+    "ref": "rec_lgh_3ad1e517c2",
+    "docid": "LGH-PS-E10442-20261002",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:47.509Z",
+    "org": "lgh",
+    "token": "pt_lgh-nadia_bhl_38f86ed91e68",
+    "ref": "rec_lgh_b652678022",
+    "docid": "LGH-PS-E11873-20261016",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:47.509Z",
+    "org": "lgh",
+    "token": "pt_lgh-nadia_bhl_38f86ed91e68",
+    "ref": "rec_lgh_3199303755",
+    "docid": "LGH-PS-E11873-20261002",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:48.759Z",
+    "org": "jfcu",
+    "token": "pt_jfcu_bhl_f1bbf4078605",
+    "ref": "rec_jfcu_d297958b02",
+    "docid": "JFCU-4417-202608",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:48.759Z",
+    "org": "jfcu",
+    "token": "pt_jfcu_bhl_f1bbf4078605",
+    "ref": "rec_jfcu_ed48450f4f",
+    "docid": "JFCU-4417-202609",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:48.759Z",
+    "org": "jfcu",
+    "token": "pt_jfcu_bhl_f1bbf4078605",
+    "ref": "rec_jfcu_19f9992c31",
+    "docid": "JFCU-8820-202608",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:48.759Z",
+    "org": "jfcu",
+    "token": "pt_jfcu_bhl_f1bbf4078605",
+    "ref": "rec_jfcu_fbedb83274",
+    "docid": "JFCU-8820-202609",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:49.064Z",
+    "org": "nsb",
+    "token": "pt_nsb_bhl_5874001abfe1",
+    "ref": "rec_nsb_2681491326",
+    "docid": "NSB-2093-202608",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:49.064Z",
+    "org": "nsb",
+    "token": "pt_nsb_bhl_5874001abfe1",
+    "ref": "rec_nsb_191cc6e860",
+    "docid": "NSB-2093-202609",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:49.064Z",
+    "org": "nsb",
+    "token": "pt_nsb_bhl_5874001abfe1",
+    "ref": "rec_nsb_063a5069db",
+    "docid": "NSB-5561-202608",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   },
+   {
+    "ts": "2026-10-29T19:03:49.064Z",
+    "org": "nsb",
+    "token": "pt_nsb_bhl_5874001abfe1",
+    "ref": "rec_nsb_2b4ca69ef8",
+    "docid": "NSB-5561-202609",
+    "recipient": "brightpath-home-lending",
+    "purpose": "mortgage-application:14-larch-lane"
+   }
+  ],
+  "denials": [
+   {
+    "ts": "2026-10-29T19:03:49.376Z",
+    "org": "bhl",
+    "operation": "documents.submit",
+    "reason": "operation documents.submit not permitted by token",
+    "params": {
+     "application_id": "BHL-26001",
+     "records": [
+      "rec_lgh_d7ce273d3e",
+      "rec_lgh_3ad1e517c2",
+      "rec_lgh_b652678022",
+      "rec_lgh_3199303755",
+      "rec_jfcu_d297958b02",
+      "rec_jfcu_ed48450f4f",
+      "rec_jfcu_19f9992c31",
+      "rec_jfcu_fbedb83274",
+      "rec_nsb_2681491326",
+      "rec_nsb_191cc6e860",
+      "rec_nsb_063a5069db",
+      "rec_nsb_2b4ca69ef8"
+     ]
+    }
+   }
+  ],
+  "calls": [
+   {
+    "ts": "2026-10-29T19:02:38.574Z",
+    "org": "bhl",
+    "operation": "products.list"
+   },
+   {
+    "ts": "2026-10-29T19:02:38.891Z",
+    "org": "cml",
+    "operation": "products.list"
+   },
+   {
+    "ts": "2026-10-29T19:02:39.201Z",
+    "org": "srm",
+    "operation": "products.list"
+   },
+   {
+    "ts": "2026-10-29T19:03:45.964Z",
+    "org": "jfcu",
+    "operation": "records.list"
+   },
+   {
+    "ts": "2026-10-29T19:03:46.274Z",
+    "org": "nsb",
+    "operation": "records.list"
+   },
+   {
+    "ts": "2026-10-29T19:03:46.584Z",
+    "org": "lgh",
+    "operation": "records.list"
+   },
+   {
+    "ts": "2026-10-29T19:03:46.892Z",
+    "org": "lgh",
+    "operation": "records.provide"
+   },
+   {
+    "ts": "2026-10-29T19:03:47.203Z",
+    "org": "lgh",
+    "operation": "records.list"
+   },
+   {
+    "ts": "2026-10-29T19:03:47.508Z",
+    "org": "lgh",
+    "operation": "records.provide"
+   },
+   {
+    "ts": "2026-10-29T19:03:47.826Z",
+    "org": "bhl",
+    "operation": "application.submit"
+   },
+   {
+    "ts": "2026-10-29T19:03:48.144Z",
+    "org": "bhl",
+    "operation": "application.status"
+   },
+   {
+    "ts": "2026-10-29T19:03:48.449Z",
+    "org": "bhl",
+    "operation": "estimate.accept_intent"
+   },
+   {
+    "ts": "2026-10-29T19:03:48.758Z",
+    "org": "jfcu",
+    "operation": "records.provide"
+   },
+   {
+    "ts": "2026-10-29T19:03:49.063Z",
+    "org": "nsb",
+    "operation": "records.provide"
+   },
+   {
+    "ts": "2026-10-29T19:03:49.376Z",
+    "org": "bhl",
+    "operation": "documents.submit"
+   }
+  ]
+ },
+ "lender": {
+  "drafts": {},
+  "applications": [
+   {
+    "id": "BHL-26001",
+    "ts": "2026-10-29T19:03:47.827Z",
+    "via": "agent",
+    "data": {
+     "borrowers": [
+      {
+       "name": "Sam Okafor-Reyes",
+       "date_of_birth": "1988-04-12",
+       "email": "sam.okafor-reyes@example.com",
+       "phone": "(555) 010-4417",
+       "marital_status": "Married",
+       "employer": "Larkspur General Hospital",
+       "position": "Registered Nurse",
+       "start_date": "2019-06-03",
+       "annual_base_income": 96200
+      },
+      {
+       "name": "Nadia Okafor-Reyes",
+       "date_of_birth": "1990-09-30",
+       "email": "nadia.okafor-reyes@example.com",
+       "phone": "(555) 010-2093",
+       "marital_status": "Married",
+       "employer": "Larkspur General Hospital",
+       "position": "Radiologic Technologist",
+       "start_date": "2021-02-15",
+       "annual_base_income": 88400
+      }
+     ],
+     "current_address": {
+      "street": "221 Alder Street, Apt 4B",
+      "city": "Cedar Hollow",
+      "state": "OR",
+      "zip": "97399",
+      "housing": "Rent",
+      "monthly_rent": 2150,
+      "years_at_address": 4
+     },
+     "property": {
+      "street": "14 Larch Lane",
+      "city": "Cedar Hollow",
+      "state": "OR",
+      "zip": "97399",
+      "purchase_price": 550000,
+      "occupancy": "Primary residence",
+      "property_type": "Single-family home"
+     },
+     "loan": {
+      "loan_amount": 440000,
+      "down_payment": 110000,
+      "product": "30-year fixed"
+     },
+     "assets": [
+      {
+       "institution": "Juniper Federal Credit Union",
+       "account_type": "checking",
+       "last4": "4417",
+       "balance": 30300.72
+      },
+      {
+       "institution": "Juniper Federal Credit Union",
+       "account_type": "savings",
+       "last4": "8820",
+       "balance": 59409.42
+      },
+      {
+       "institution": "Northgate Savings Bank",
+       "account_type": "checking",
+       "last4": "2093",
+       "balance": 33031.75
+      },
+      {
+       "institution": "Northgate Savings Bank",
+       "account_type": "savings",
+       "last4": "5561",
+       "balance": 46076.27
+      }
+     ]
+    },
+    "docids": [],
+    "records": [],
+    "consents": {
+     "credit_check": true,
+     "esign": true
+    },
+    "status": "submitted",
+    "conditions": [],
+    "token": "pt_lender_bhl_ba4f4b8a74e1",
+    "le_issued": "2026-10-29T19:03:47.833Z"
+   }
+  ],
+  "condition_responses": [],
+  "intents": [
+   {
+    "app": "BHL-26001",
+    "estimate_id": "LE-BHL-26001-1",
+    "ts": "2026-10-29T19:03:48.450Z",
+    "via": "agent",
+    "terms": {
+     "rate_percent": 7.25,
+     "apr_percent": 7.382,
+     "loan_amount": 440000,
+     "term_years": 30,
+     "product": "30-year fixed",
+     "monthly_principal_interest": 3001.58,
+     "estimated_escrow": 484,
+     "estimated_total_monthly_payment": 3485.58,
+     "closing_costs": 13200,
+     "cash_to_close": 123200,
+     "rate_lock_days": 45
+    }
+   }
+  ],
+  "uploads": []
+ },
+ "index": {
+  "pages": [
+   "http://127.0.0.1:7104/rates",
+   "http://127.0.0.1:7105/rates",
+   "http://127.0.0.1:7106/rates"
+  ],
+  "triples": 159,
+  "engine": "@sparq-org/sparq@0.1.5"
+ },
+ "le_issued_by_testbed": "2026-10-29T19:03:47.833Z"
+}

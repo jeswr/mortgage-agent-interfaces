@@ -1,0 +1,15 @@
+{"ts":"2026-10-29T19:28:15.698Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:28:15.710Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:28:43.478Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:28:43.979Z","tool":"approve_grant","org":"jfcu","scope":"Last 2 monthly statements of Sam's checking and savings accounts, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:29:00.720Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:29:00.722Z","tool":"approve_grant","org":"nsb","scope":"Last 2 monthly statements of Nadia's checking and savings accounts, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:29:17.335Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:29:17.338Z","tool":"approve_grant","org":"lgh","scope":"Last 2 payslips each for Sam and Nadia, and 2025 W-2s for each, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:29:33.962Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:29:33.968Z","tool":"approve_grant","org":"bhl","scope":"Submit application, respond to conditions, credit check and e-sign consent, accept intent to proceed, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:30:30.723Z","tool":"save_note","chars":2086}
+{"ts":"2026-10-29T19:30:46.169Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:30:46.547Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:32:12.209Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:32:12.274Z","tool":"ask_user","question":"The lender's underwriter asks for a written explanation of an $8,000.00 deposit on 09/03/2026 into Sam's Juniper FCU checking account (ending 4417). What was the source of that deposit?","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

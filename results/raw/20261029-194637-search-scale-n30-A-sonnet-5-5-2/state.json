@@ -1,0 +1,20 @@
+{
+ "condition": "search-scale",
+ "N": 30,
+ "answer": {
+  "slug": "cascade-bank-mortgage",
+  "name": "Cascade Bank Mortgage",
+  "product_code": "CBM12-30",
+  "rate_percent": 6.75
+ },
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 30,
+  "triples": 1506,
+  "build_ms": 456
+ },
+ "products_list_calls": {},
+ "pages": {
+  "columbia-lending": 1
+ }
+}

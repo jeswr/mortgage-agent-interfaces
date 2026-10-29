@@ -1,0 +1,18 @@
+{
+ "condition": "search-scale",
+ "N": 3,
+ "answer": {
+  "slug": "larch-lending",
+  "name": "Larch Lending",
+  "product_code": "LL03-30",
+  "rate_percent": 6.75
+ },
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 3,
+  "triples": 153,
+  "build_ms": 245
+ },
+ "products_list_calls": {},
+ "pages": {}
+}

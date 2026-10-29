@@ -1,0 +1,23 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-193643-grounded-C-RDF-sonnet-5-5-4",
+    "cond=grounded",
+    "seed=20261029-193643-grounded-C-RDF-sonnet-5-5-4",
+    "human=grant",
+    "nonce=s1"
+   ]
+  },
+  "ld": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-ld.js",
+    "./results/raw/20261029-193643-grounded-C-RDF-sonnet-5-5-4",
+    "7240"
+   ]
+  }
+ }
+}

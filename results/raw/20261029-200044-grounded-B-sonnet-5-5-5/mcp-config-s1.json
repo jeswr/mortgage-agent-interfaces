@@ -1,0 +1,38 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-200044-grounded-B-sonnet-5-5-5",
+    "cond=grounded",
+    "seed=20261029-200044-grounded-B-sonnet-5-5-5",
+    "human=code+consent",
+    "nonce=s1"
+   ]
+  },
+  "browser": {
+   "command": "npx",
+   "args": [
+    "-y",
+    "@playwright/mcp@0.0.83",
+    "--headless",
+    "--isolated",
+    "--output-dir",
+    "./results/raw/20261029-200044-grounded-B-sonnet-5-5-5/work/downloads",
+    "--allowed-origins",
+    "http://127.0.0.1:7184;http://127.0.0.1:7185;http://127.0.0.1:7186",
+    "--viewport-size",
+    "1280x900"
+   ]
+  },
+  "http": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-http.js",
+    "./results/raw/20261029-200044-grounded-B-sonnet-5-5-5",
+    "http://127.0.0.1:7181,http://127.0.0.1:7182,http://127.0.0.1:7183"
+   ]
+  }
+ }
+}

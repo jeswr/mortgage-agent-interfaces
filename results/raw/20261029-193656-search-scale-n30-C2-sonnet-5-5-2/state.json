@@ -1,0 +1,49 @@
+{
+ "condition": "search-scale",
+ "N": 30,
+ "answer": {
+  "slug": "cascade-bank-mortgage",
+  "name": "Cascade Bank Mortgage",
+  "product_code": "CBM12-30",
+  "rate_percent": 6.75
+ },
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 30,
+  "triples": 1506,
+  "build_ms": 472
+ },
+ "products_list_calls": {
+  "columbia-lending": 1,
+  "larch-home-finance": 1,
+  "alder-home-loans": 1,
+  "wallowa-lending": 1,
+  "larch-funding": 1,
+  "columbia-funding": 1,
+  "silver-falls-mortgage-group": 1,
+  "summit-home-finance": 1,
+  "steelhead-home-loans": 1,
+  "bluebird-mortgage-company": 1,
+  "wallowa-home-loans": 1,
+  "cascade-bank-mortgage": 1,
+  "columbia-mortgage": 1,
+  "mt-hood-home-finance": 1,
+  "crater-credit-union": 1,
+  "deschutes-mortgage-group": 1,
+  "siskiyou-home-loans": 1,
+  "basalt-mortgage-company": 1,
+  "siskiyou-funding": 1,
+  "alder-mortgage-group": 1,
+  "alder-credit-union": 1,
+  "larch-credit-union": 1,
+  "timberline-mortgage-company": 1,
+  "sandy-river-mortgage-group": 1,
+  "basalt-bank-mortgage": 1,
+  "umpqua-mortgage-group": 1,
+  "harbor-bank-mortgage": 1,
+  "umpqua-bank-mortgage": 1,
+  "high-desert-lending": 1,
+  "larch-mortgage-group": 1
+ },
+ "pages": {}
+}

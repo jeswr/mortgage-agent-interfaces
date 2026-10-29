@@ -1,0 +1,17 @@
+{"ts":"2026-10-29T19:41:13.306Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:41:13.340Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:42:11.322Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:42:11.327Z","tool":"request_consent","org":"jfcu","scopes":"Read-only access to Sam's checking and savings account statements (last 2 monthly statements each), for the mortgage application with Brightpath Home Lending","approved":true}
+{"ts":"2026-10-29T19:42:27.956Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:42:27.958Z","tool":"request_consent","org":"nsb","scopes":"Read-only access to Nadia's personal checking and savings account statements (last 2 monthly statements each), for the mortgage application with Brightpath Home Lending","approved":true}
+{"ts":"2026-10-29T19:42:44.587Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:42:44.594Z","tool":"request_consent","org":"lgh","scopes":"Read-only access to Sam's and Nadia's last 2 payslips and 2025 W-2s, for the mortgage application with Brightpath Home Lending","approved":true}
+{"ts":"2026-10-29T19:44:19.428Z","tool":"human_wait","for":"request_code","s":16.6}
+{"ts":"2026-10-29T19:44:19.435Z","tool":"request_code","org":"bhl","channel":"sms","answered":true}
+{"ts":"2026-10-29T19:46:49.958Z","tool":"save_note","chars":1371}
+{"ts":"2026-10-29T19:47:09.770Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:47:09.795Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:47:49.086Z","tool":"human_wait","for":"request_code","s":16.6}
+{"ts":"2026-10-29T19:47:49.098Z","tool":"request_code","org":"bhl","channel":"sms","answered":true}
+{"ts":"2026-10-29T19:51:05.502Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:51:05.510Z","tool":"ask_user","question":"The lender's underwriter asks for a written explanation of an $8,000.00 deposit on 09/03/2026 into Sam's Juniper FCU checking (ending 4417). What was the source of that deposit (e.g., gift, sale, bonus, transfer)? I'll send your answer to the lender (Brightpath) only.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

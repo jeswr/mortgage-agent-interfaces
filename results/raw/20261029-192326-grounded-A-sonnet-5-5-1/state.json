@@ -1,0 +1,681 @@
+{
+ "seed": "20261029-192326-grounded-A-sonnet-5-5-1",
+ "condition": "grounded",
+ "friction_events": [],
+ "started": "2026-10-29T19:23:26.410Z",
+ "consent": {
+  "bhl": [
+   "essential",
+   "essential"
+  ],
+  "lgh": [
+   "essential"
+  ],
+  "jfcu": [
+   "essential"
+  ],
+  "nsb": [
+   "essential"
+  ]
+ },
+ "logins": {
+  "bhl": {
+   "ok": 2,
+   "fail": 0
+  },
+  "lgh": {
+   "ok": 2,
+   "fail": 0
+  },
+  "jfcu": {
+   "ok": 1,
+   "fail": 0
+  },
+  "nsb": {
+   "ok": 1,
+   "fail": 0
+  }
+ },
+ "docs_accessed": [
+  {
+   "ts": "2026-10-29T19:26:26.898Z",
+   "org": "lgh",
+   "docid": "LGH-PS-E10442-20261016",
+   "via": "web-view"
+  },
+  {
+   "ts": "2026-10-29T19:26:30.259Z",
+   "org": "lgh",
+   "docid": "LGH-PS-E10442-20261016",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:26:33.018Z",
+   "org": "lgh",
+   "docid": "LGH-PS-E10442-20261002",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:26:41.441Z",
+   "org": "lgh",
+   "docid": "LGH-PS-E10442-20261016",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:26:42.681Z",
+   "org": "lgh",
+   "docid": "LGH-W2-E10442-2025",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:27:31.500Z",
+   "org": "lgh",
+   "docid": "LGH-PS-E11873-20261016",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:27:32.709Z",
+   "org": "lgh",
+   "docid": "LGH-PS-E11873-20261002",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:27:33.915Z",
+   "org": "lgh",
+   "docid": "LGH-W2-E11873-2025",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:27:36.404Z",
+   "org": "lgh",
+   "docid": "LGH-PS-E11873-20261016",
+   "via": "web-view"
+  },
+  {
+   "ts": "2026-10-29T19:28:51.924Z",
+   "org": "jfcu",
+   "docid": "JFCU-4417-202609",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:28:53.787Z",
+   "org": "jfcu",
+   "docid": "JFCU-4417-202608",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:28:55.027Z",
+   "org": "jfcu",
+   "docid": "JFCU-8820-202609",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:28:56.269Z",
+   "org": "jfcu",
+   "docid": "JFCU-8820-202608",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:30:00.788Z",
+   "org": "nsb",
+   "docid": "NSB-2093-202609",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:30:02.015Z",
+   "org": "nsb",
+   "docid": "NSB-2093-202608",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:30:03.218Z",
+   "org": "nsb",
+   "docid": "NSB-5561-202609",
+   "via": "web-pdf"
+  },
+  {
+   "ts": "2026-10-29T19:30:04.425Z",
+   "org": "nsb",
+   "docid": "NSB-5561-202608",
+   "via": "web-pdf"
+  }
+ ],
+ "bespoke_auth_failures": [],
+ "agent": {
+  "provided": [],
+  "denials": [],
+  "calls": []
+ },
+ "lender": {
+  "drafts": {
+   "household": {
+    "fields": {
+     "b1_name": "Sam Okafor-Reyes",
+     "b1_dob": "04/12/1988",
+     "b1_email": "sam.okafor-reyes@example.com",
+     "b1_phone": "(555) 010-4417",
+     "b1_marital": "Married",
+     "b2_name": "Nadia Okafor-Reyes",
+     "b2_dob": "09/30/1990",
+     "b2_email": "nadia.okafor-reyes@example.com",
+     "b2_phone": "(555) 010-2093",
+     "b2_marital": "Married",
+     "addr_street": "221 Alder Street, Apt 4B",
+     "addr_city": "Cedar Hollow",
+     "addr_state": "OR",
+     "addr_zip": "97399",
+     "addr_housing": "Rent",
+     "addr_rent": "2150",
+     "b1_employer": "Larkspur General Hospital",
+     "b1_position": "Registered Nurse",
+     "b1_start": "06/03/2019",
+     "b1_income": "96200",
+     "b1_other_income": "",
+     "b2_employer": "Larkspur General Hospital",
+     "b2_position": "Radiologic Technologist",
+     "b2_start": "02/15/2021",
+     "b2_income": "88400",
+     "b2_other_income": "",
+     "a1_inst": "Juniper Federal Credit Union",
+     "a1_type": "Checking",
+     "a1_last4": "4417",
+     "a1_bal": "30300.72",
+     "a2_inst": "Juniper Federal Credit Union",
+     "a2_type": "Savings",
+     "a2_last4": "8820",
+     "a2_bal": "59409.42",
+     "a3_inst": "Northgate Savings Bank",
+     "a3_type": "Checking",
+     "a3_last4": "2093",
+     "a3_bal": "33031.75",
+     "a4_inst": "Northgate Savings Bank",
+     "a4_type": "Savings",
+     "a4_last4": "5561",
+     "a4_bal": "46076.27",
+     "a5_inst": "",
+     "a5_type": "",
+     "a5_last4": "",
+     "a5_bal": "",
+     "a6_inst": "",
+     "a6_type": "",
+     "a6_last4": "",
+     "a6_bal": "",
+     "prop_street": "14 Larch Lane",
+     "prop_city": "Cedar Hollow",
+     "prop_state": "OR",
+     "prop_zip": "97399",
+     "prop_price": "550000",
+     "down_payment": "110000",
+     "loan_amount": "440000",
+     "loan_product": "30-year fixed",
+     "occupancy": "Primary residence"
+    },
+    "docs": []
+   }
+  },
+  "applications": [
+   {
+    "id": "BHL-26001",
+    "ts": "2026-10-29T19:31:01.807Z",
+    "via": "web",
+    "data": {
+     "b1_name": "Sam Okafor-Reyes",
+     "b1_dob": "04/12/1988",
+     "b1_email": "sam.okafor-reyes@example.com",
+     "b1_phone": "(555) 010-4417",
+     "b1_marital": "Married",
+     "b2_name": "Nadia Okafor-Reyes",
+     "b2_dob": "09/30/1990",
+     "b2_email": "nadia.okafor-reyes@example.com",
+     "b2_phone": "(555) 010-2093",
+     "b2_marital": "Married",
+     "addr_street": "221 Alder Street, Apt 4B",
+     "addr_city": "Cedar Hollow",
+     "addr_state": "OR",
+     "addr_zip": "97399",
+     "addr_housing": "Rent",
+     "addr_rent": "2150",
+     "b1_employer": "Larkspur General Hospital",
+     "b1_position": "Registered Nurse",
+     "b1_start": "06/03/2019",
+     "b1_income": "96200",
+     "b1_other_income": "",
+     "b2_employer": "Larkspur General Hospital",
+     "b2_position": "Radiologic Technologist",
+     "b2_start": "02/15/2021",
+     "b2_income": "88400",
+     "b2_other_income": "",
+     "a1_inst": "Juniper Federal Credit Union",
+     "a1_type": "Checking",
+     "a1_last4": "4417",
+     "a1_bal": "30300.72",
+     "a2_inst": "Juniper Federal Credit Union",
+     "a2_type": "Savings",
+     "a2_last4": "8820",
+     "a2_bal": "59409.42",
+     "a3_inst": "Northgate Savings Bank",
+     "a3_type": "Checking",
+     "a3_last4": "2093",
+     "a3_bal": "33031.75",
+     "a4_inst": "Northgate Savings Bank",
+     "a4_type": "Savings",
+     "a4_last4": "5561",
+     "a4_bal": "46076.27",
+     "a5_inst": "",
+     "a5_type": "",
+     "a5_last4": "",
+     "a5_bal": "",
+     "a6_inst": "",
+     "a6_type": "",
+     "a6_last4": "",
+     "a6_bal": "",
+     "prop_street": "14 Larch Lane",
+     "prop_city": "Cedar Hollow",
+     "prop_state": "OR",
+     "prop_zip": "97399",
+     "prop_price": "550000",
+     "down_payment": "110000",
+     "loan_amount": "440000",
+     "loan_product": "30-year fixed",
+     "occupancy": "Primary residence"
+    },
+    "docids": [
+     "JFCU-4417-202608",
+     "JFCU-4417-202609",
+     "JFCU-8820-202608",
+     "JFCU-8820-202609",
+     "NSB-2093-202608",
+     "NSB-2093-202609",
+     "NSB-5561-202608",
+     "NSB-5561-202609",
+     "LGH-PS-E10442-20261016",
+     "LGH-PS-E10442-20261002",
+     "LGH-PS-E11873-20261016",
+     "LGH-PS-E11873-20261002"
+    ],
+    "records": [],
+    "consents": {
+     "credit_check": true,
+     "esign": true
+    },
+    "status": "submitted",
+    "conditions": [
+     {
+      "condition_id": "C-BHL-26001-1",
+      "text": "Please explain the source of the $8,000.00 deposit on 09/03/2026 into account ending 4417 (Sam Okafor-Reyes, Juniper FCU checking). A written explanation is sufficient at this stage.",
+      "status": "response received"
+     },
+     {
+      "condition_id": "C-BHL-26001-2",
+      "text": "Please provide each borrower's most recent W-2 (tax year 2025).",
+      "status": "response received"
+     }
+    ],
+    "le_issued": "2026-10-29T19:31:40.891Z",
+    "web_docs": [
+     {
+      "upload_id": "U1",
+      "app": "BHL-26001",
+      "filename": "JFCU-4417-202608.pdf",
+      "size": 2092,
+      "docids": [
+       "JFCU-4417-202608"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.037Z"
+     },
+     {
+      "upload_id": "U2",
+      "app": "BHL-26001",
+      "filename": "JFCU-4417-202609.pdf",
+      "size": 2185,
+      "docids": [
+       "JFCU-4417-202609"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.037Z"
+     },
+     {
+      "upload_id": "U3",
+      "app": "BHL-26001",
+      "filename": "JFCU-8820-202608.pdf",
+      "size": 1255,
+      "docids": [
+       "JFCU-8820-202608"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.037Z"
+     },
+     {
+      "upload_id": "U4",
+      "app": "BHL-26001",
+      "filename": "JFCU-8820-202609.pdf",
+      "size": 1255,
+      "docids": [
+       "JFCU-8820-202609"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.037Z"
+     },
+     {
+      "upload_id": "U5",
+      "app": "BHL-26001",
+      "filename": "NSB-2093-202608.pdf",
+      "size": 1809,
+      "docids": [
+       "NSB-2093-202608"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.038Z"
+     },
+     {
+      "upload_id": "U6",
+      "app": "BHL-26001",
+      "filename": "NSB-2093-202609.pdf",
+      "size": 1942,
+      "docids": [
+       "NSB-2093-202609"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.038Z"
+     },
+     {
+      "upload_id": "U7",
+      "app": "BHL-26001",
+      "filename": "NSB-5561-202608.pdf",
+      "size": 1242,
+      "docids": [
+       "NSB-5561-202608"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.038Z"
+     },
+     {
+      "upload_id": "U8",
+      "app": "BHL-26001",
+      "filename": "NSB-5561-202609.pdf",
+      "size": 1242,
+      "docids": [
+       "NSB-5561-202609"
+      ],
+      "doc_type": "Bank statement",
+      "ts": "2026-10-29T19:33:41.038Z"
+     },
+     {
+      "upload_id": "U9",
+      "app": "BHL-26001",
+      "filename": "LGH-PS-E10442-20261016.pdf",
+      "size": 1350,
+      "docids": [
+       "LGH-PS-E10442-20261016"
+      ],
+      "doc_type": "Pay stub",
+      "ts": "2026-10-29T19:34:03.050Z"
+     },
+     {
+      "upload_id": "U10",
+      "app": "BHL-26001",
+      "filename": "LGH-PS-E10442-20261002.pdf",
+      "size": 1350,
+      "docids": [
+       "LGH-PS-E10442-20261002"
+      ],
+      "doc_type": "Pay stub",
+      "ts": "2026-10-29T19:34:03.050Z"
+     },
+     {
+      "upload_id": "U11",
+      "app": "BHL-26001",
+      "filename": "LGH-PS-E11873-20261016.pdf",
+      "size": 1334,
+      "docids": [
+       "LGH-PS-E11873-20261016"
+      ],
+      "doc_type": "Pay stub",
+      "ts": "2026-10-29T19:34:03.050Z"
+     },
+     {
+      "upload_id": "U12",
+      "app": "BHL-26001",
+      "filename": "LGH-PS-E11873-20261002.pdf",
+      "size": 1334,
+      "docids": [
+       "LGH-PS-E11873-20261002"
+      ],
+      "doc_type": "Pay stub",
+      "ts": "2026-10-29T19:34:03.050Z"
+     }
+    ],
+    "package": {
+     "ts": "2026-10-29T19:34:19.317Z",
+     "via": "web",
+     "count": 12
+    }
+   }
+  ],
+  "condition_responses": [
+   {
+    "app": "BHL-26001",
+    "condition_id": "C-BHL-26001-1",
+    "text": "The $8,000.00 deposit on 09/03/2026 into Sam Okafor-Reyes's Juniper FCU checking (ending 4417) was a gift from Sam's parents toward the down payment. It is not a loan and does not need to be repaid.",
+    "docids": [],
+    "files": [],
+    "ts": "2026-10-29T19:35:37.293Z",
+    "via": "web"
+   },
+   {
+    "app": "BHL-26001",
+    "condition_id": "C-BHL-26001-2",
+    "text": "Attached are the 2025 W-2s for Sam Okafor-Reyes and Nadia Okafor-Reyes (Larkspur General Hospital).",
+    "docids": [
+     "LGH-W2-E10442-2025",
+     "LGH-W2-E11873-2025"
+    ],
+    "files": [
+     "LGH-W2-E10442-2025.pdf",
+     "LGH-W2-E11873-2025.pdf"
+    ],
+    "ts": "2026-10-29T19:36:11.506Z",
+    "via": "web"
+   }
+  ],
+  "intents": [
+   {
+    "app": "BHL-26001",
+    "estimate_id": "LE-BHL-26001-1",
+    "ts": "2026-10-29T19:33:12.600Z",
+    "via": "web",
+    "signature": "Sam Okafor-Reyes and Nadia Okafor-Reyes",
+    "terms": {
+     "rate_percent": 7.25,
+     "apr_percent": 7.382,
+     "loan_amount": 440000,
+     "term_years": 30,
+     "product": "30-year fixed",
+     "monthly_principal_interest": 3001.58,
+     "estimated_escrow": 484,
+     "estimated_total_monthly_payment": 3485.58,
+     "closing_costs": 13200,
+     "cash_to_close": 123200,
+     "rate_lock_days": 45
+    }
+   }
+  ],
+  "uploads": [
+   {
+    "upload_id": "U1",
+    "app": "BHL-26001",
+    "filename": "JFCU-4417-202608.pdf",
+    "size": 2092,
+    "docids": [
+     "JFCU-4417-202608"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.037Z"
+   },
+   {
+    "upload_id": "U2",
+    "app": "BHL-26001",
+    "filename": "JFCU-4417-202609.pdf",
+    "size": 2185,
+    "docids": [
+     "JFCU-4417-202609"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.037Z"
+   },
+   {
+    "upload_id": "U3",
+    "app": "BHL-26001",
+    "filename": "JFCU-8820-202608.pdf",
+    "size": 1255,
+    "docids": [
+     "JFCU-8820-202608"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.037Z"
+   },
+   {
+    "upload_id": "U4",
+    "app": "BHL-26001",
+    "filename": "JFCU-8820-202609.pdf",
+    "size": 1255,
+    "docids": [
+     "JFCU-8820-202609"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.037Z"
+   },
+   {
+    "upload_id": "U5",
+    "app": "BHL-26001",
+    "filename": "NSB-2093-202608.pdf",
+    "size": 1809,
+    "docids": [
+     "NSB-2093-202608"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.038Z"
+   },
+   {
+    "upload_id": "U6",
+    "app": "BHL-26001",
+    "filename": "NSB-2093-202609.pdf",
+    "size": 1942,
+    "docids": [
+     "NSB-2093-202609"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.038Z"
+   },
+   {
+    "upload_id": "U7",
+    "app": "BHL-26001",
+    "filename": "NSB-5561-202608.pdf",
+    "size": 1242,
+    "docids": [
+     "NSB-5561-202608"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.038Z"
+   },
+   {
+    "upload_id": "U8",
+    "app": "BHL-26001",
+    "filename": "NSB-5561-202609.pdf",
+    "size": 1242,
+    "docids": [
+     "NSB-5561-202609"
+    ],
+    "doc_type": "Bank statement",
+    "ts": "2026-10-29T19:33:41.038Z"
+   },
+   {
+    "upload_id": "U9",
+    "app": "BHL-26001",
+    "filename": "LGH-PS-E10442-20261016.pdf",
+    "size": 1350,
+    "docids": [
+     "LGH-PS-E10442-20261016"
+    ],
+    "doc_type": "Pay stub",
+    "ts": "2026-10-29T19:34:03.050Z"
+   },
+   {
+    "upload_id": "U10",
+    "app": "BHL-26001",
+    "filename": "LGH-PS-E10442-20261002.pdf",
+    "size": 1350,
+    "docids": [
+     "LGH-PS-E10442-20261002"
+    ],
+    "doc_type": "Pay stub",
+    "ts": "2026-10-29T19:34:03.050Z"
+   },
+   {
+    "upload_id": "U11",
+    "app": "BHL-26001",
+    "filename": "LGH-PS-E11873-20261016.pdf",
+    "size": 1334,
+    "docids": [
+     "LGH-PS-E11873-20261016"
+    ],
+    "doc_type": "Pay stub",
+    "ts": "2026-10-29T19:34:03.050Z"
+   },
+   {
+    "upload_id": "U12",
+    "app": "BHL-26001",
+    "filename": "LGH-PS-E11873-20261002.pdf",
+    "size": 1334,
+    "docids": [
+     "LGH-PS-E11873-20261002"
+    ],
+    "doc_type": "Pay stub",
+    "ts": "2026-10-29T19:34:03.050Z"
+   }
+  ]
+ },
+ "index": {
+  "pages": [
+   "http://127.0.0.1:7164/rates",
+   "http://127.0.0.1:7165/rates",
+   "http://127.0.0.1:7166/rates"
+  ],
+  "triples": 159,
+  "engine": "@sparq-org/sparq@0.1.5"
+ },
+ "otp_issued": [
+  {
+   "ts": "2026-10-29T19:24:09.450Z",
+   "org": "bhl",
+   "user": "household"
+  },
+  {
+   "ts": "2026-10-29T19:25:41.465Z",
+   "org": "lgh",
+   "user": "sam"
+  },
+  {
+   "ts": "2026-10-29T19:26:56.687Z",
+   "org": "lgh",
+   "user": "nadia"
+  },
+  {
+   "ts": "2026-10-29T19:27:55.275Z",
+   "org": "jfcu",
+   "user": "sam"
+  },
+  {
+   "ts": "2026-10-29T19:29:12.047Z",
+   "org": "nsb",
+   "user": "nadia"
+  },
+  {
+   "ts": "2026-10-29T19:32:15.731Z",
+   "org": "bhl",
+   "user": "household"
+  }
+ ],
+ "le_issued_by_testbed": "2026-10-29T19:31:40.891Z"
+}

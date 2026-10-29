@@ -1,0 +1,15 @@
+{"ts":"2026-10-29T19:39:17.556Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:39:17.714Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:39:58.835Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:39:58.838Z","tool":"request_consent","org":"bhl","scopes":"Create and submit a mortgage application for 14 Larch Lane; view loan estimate and conditions; record intent to proceed","approved":true}
+{"ts":"2026-10-29T19:40:15.453Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:40:15.455Z","tool":"request_consent","org":"jfcu","scopes":"Read-only: Sam's checking and savings balances and last 2 monthly statements","approved":true}
+{"ts":"2026-10-29T19:40:32.074Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:40:32.077Z","tool":"request_consent","org":"nsb","scopes":"Read-only: Nadia's personal checking and savings balances and last 2 monthly statements","approved":true}
+{"ts":"2026-10-29T19:40:48.694Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:40:48.697Z","tool":"request_consent","org":"lgh","scopes":"Read-only: Sam and Nadia's salary, last 2 payslips each, and 2025 W-2s","approved":true}
+{"ts":"2026-10-29T19:41:23.517Z","tool":"save_note","chars":1359}
+{"ts":"2026-10-29T19:41:43.920Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:41:43.949Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:44:19.258Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:44:19.269Z","tool":"ask_user","question":"Brightpath underwriting asks for a written explanation of the $8,000.00 mobile check deposit (check #1042) on 09/03/2026 into Sam's Juniper checking (ending 4417). What was the source of that deposit (e.g., who paid it and why)? Please give me the wording you're comfortable with, and I'll send it to Brightpath.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

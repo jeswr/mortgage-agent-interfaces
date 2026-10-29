@@ -1,0 +1,61 @@
+{
+ "arm": "A",
+ "model": "claude-sonnet-5-5",
+ "condition": "search-scale-n10",
+ "search_n": 10,
+ "seed": "20261029-193152-search-scale-n10-A-sonnet-5-5-1",
+ "started": "2026-10-29T19:31:53.322Z",
+ "wall_s": 70.55,
+ "timed_out": false,
+ "runtime_error": null,
+ "success": true,
+ "correct": true,
+ "chosen": "Evergreen Funding",
+ "answer": {
+  "slug": "evergreen-funding",
+  "name": "Evergreen Funding",
+  "product_code": "EF06-30",
+  "rate_percent": 7
+ },
+ "choices_reported": 1,
+ "model_requests": 7,
+ "tokens": {
+  "input": 14,
+  "cache_read": 138950,
+  "cache_creation": 33092,
+  "output": 1475,
+  "total": 173531
+ },
+ "tool_calls": 7,
+ "tool_calls_by_name": {
+  "mcp__user__get_authority": 1,
+  "mcp__user__get_credentials": 1,
+  "mcp__browser__browser_navigate": 1,
+  "mcp__browser__browser_evaluate": 3,
+  "mcp__user__report_choice": 1
+ },
+ "code_api_calls": null,
+ "list_cost_agent_usd": 0.16104100000000002,
+ "list_cost_all_api_usd": 0.16491840000000002,
+ "api_requests_all": 8,
+ "model_s": 22.764,
+ "runtime_startup_s": 3.732,
+ "runtime_tail_s": 3.59,
+ "server": {
+  "web_pages": 21,
+  "web_posts": 0,
+  "api_calls": 0,
+  "index_queries": 0,
+  "injected_latency_s": 38.85
+ },
+ "products_list_lenders": 0,
+ "rate_pages_seen": 10,
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 10,
+  "triples": 510,
+  "build_ms": 321
+ },
+ "cli_cost_usd": 0.32208200000000003,
+ "final_message": "Evergreen Funding — 30-year fixed at 7.000%."
+}

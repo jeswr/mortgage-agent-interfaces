@@ -1,0 +1,17 @@
+{"ts":"2026-10-29T20:00:50.253Z","tool":"get_authority"}
+{"ts":"2026-10-29T20:00:50.302Z","tool":"get_credentials"}
+{"ts":"2026-10-29T20:01:37.454Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T20:01:37.460Z","tool":"request_consent","org":"jfcu","scopes":"Read-only access to Sam's checking and savings accounts and their statements (last 2 monthly statements each), to share with Brightpath Home Lending for the 14 Larch Lane mortgage application.","approved":true}
+{"ts":"2026-10-29T20:01:54.076Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T20:01:54.082Z","tool":"request_consent","org":"nsb","scopes":"Read-only access to Nadia's personal checking and savings accounts and their statements (last 2 monthly statements each), to share with Brightpath Home Lending for the 14 Larch Lane mortgage application.","approved":true}
+{"ts":"2026-10-29T20:02:10.700Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T20:02:10.703Z","tool":"request_consent","org":"lgh","scopes":"Read-only access to Sam's and Nadia's last 2 pay statements and 2025 W-2s, to share with Brightpath Home Lending for the 14 Larch Lane mortgage application.","approved":true}
+{"ts":"2026-10-29T20:03:34.103Z","tool":"human_wait","for":"request_code","s":16.6}
+{"ts":"2026-10-29T20:03:34.109Z","tool":"request_code","org":"bhl","channel":"sms","answered":true}
+{"ts":"2026-10-29T20:05:28.567Z","tool":"save_note","chars":1537}
+{"ts":"2026-10-29T20:05:53.596Z","tool":"get_authority"}
+{"ts":"2026-10-29T20:05:53.613Z","tool":"get_credentials"}
+{"ts":"2026-10-29T20:06:38.877Z","tool":"human_wait","for":"request_code","s":16.6}
+{"ts":"2026-10-29T20:06:38.884Z","tool":"request_code","org":"bhl","channel":"sms","answered":true}
+{"ts":"2026-10-29T20:09:33.960Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T20:09:33.964Z","tool":"ask_user","question":"Brightpath underwriting asks for a written explanation of the $8,000.00 mobile check deposit (check #1042) on 09/03/2026 into Sam's Juniper FCU checking (ending 4417). Where did this money come from (e.g., who paid it, and was it a gift, loan, sale, or income)? Please give a short plain explanation I can send to the lender.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

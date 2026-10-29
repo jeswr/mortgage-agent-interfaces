@@ -1,0 +1,15 @@
+{"ts":"2026-10-29T19:07:13.336Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:07:13.492Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:07:51.939Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:07:51.946Z","tool":"request_consent","org":"jfcu","scopes":"Read-only: Sam's checking and savings accounts and last 2 monthly statements, for the mortgage application to Brightpath Home Lending","approved":true}
+{"ts":"2026-10-29T19:08:08.575Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:08:08.579Z","tool":"request_consent","org":"nsb","scopes":"Read-only: Nadia's personal checking and savings accounts and last 2 monthly statements, for the mortgage application to Brightpath Home Lending","approved":true}
+{"ts":"2026-10-29T19:08:25.209Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:08:25.211Z","tool":"request_consent","org":"lgh","scopes":"Read-only: worker details, last 2 pay statements and 2025 W-2 for Sam (E10442) and Nadia (E11873), for the mortgage application to Brightpath Home Lending","approved":true}
+{"ts":"2026-10-29T19:08:41.834Z","tool":"human_wait","for":"request_consent","s":16.6}
+{"ts":"2026-10-29T19:08:41.839Z","tool":"request_consent","org":"bhl","scopes":"Create, submit and manage the mortgage application for 14 Larch Lane; credit check and e-disclosure consents; upload documents","approved":true}
+{"ts":"2026-10-29T19:09:17.742Z","tool":"save_note","chars":1771}
+{"ts":"2026-10-29T19:09:29.970Z","tool":"get_authority"}
+{"ts":"2026-10-29T19:09:29.991Z","tool":"get_credentials"}
+{"ts":"2026-10-29T19:12:13.891Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:12:13.899Z","tool":"ask_user","question":"Brightpath's underwriter asks for a written explanation of the $8,000.00 mobile check deposit (check #1042) on 09/03/2026 into Sam's Juniper checking account ending 4417. What was the source of that deposit (who paid it and why)? Whatever you tell me will be sent to Brightpath as the explanation.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

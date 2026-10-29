@@ -50,13 +50,23 @@ function requestConsent(org, scopes, runDir, seed) {
 }
 // The wallet asks the person to approve a grant for one organization; returns the permission token(s). Conservative scope:
 // exactly what the authority allows (data orgs: the authorised records for the named recipient lender; lender: the application operations within the limits).
-function approveGrant(org, scope, recipient, runDir, seed) {
+function approveGrant(org, scope, recipient, runDir, seed, cond, standing) {
   const k = orgKey(org); const r = orgKey(recipient) || (['bhl', 'cml', 'srm'].includes(k) ? k : null); const log = path.join(runDir, 'user-tool.jsonl');
   const okRecipient = r && ['bhl', 'cml', 'srm'].includes(r);
   const toks = k && okRecipient ? F.walletTokensFor(seed, k, r) : [];
-  fs.appendFileSync(log, JSON.stringify({ ts: new Date().toISOString(), tool: 'approve_grant', org: k, scope: scope || '', recipient: r, approved: toks.length > 0 }) + '\n');
+  fs.appendFileSync(log, JSON.stringify({ ts: new Date().toISOString(), tool: standing ? 'wallet_grant' : 'approve_grant', org: k, scope: scope || '', recipient: r, approved: toks.length > 0 }) + '\n');
   if (!toks.length) return k && !okRecipient ? 'Not approved: name the lender (recipient) this grant is for.' : 'Not approved: unknown organization.';
   const what = ['bhl', 'cml', 'srm'].includes(k) ? `submit and manage our application with ${NAMES[k]}; accept intent only within our limits` : `share only the records our authority allows, only with ${NAMES[r]}, only for this application`;
   return JSON.stringify({ approved: true, organization: k, recipient: F.LENDER_IDS[r], scope_granted: what, tokens: toks }, null, 1);
 }
-module.exports = { askUser, reissueToken, notifyUser, requestCode, requestConsent, approveGrant, orgKey, GIFT, BUSINESS, ESTIMATE_NO };
+// grounded: human response time. 16.6 s per code, consent or approval (median SMS second-factor time, Reese et al., SOUPS 2019);
+// 60 s per question (assumption). Logged as human_wait entries.
+const HUMAN_S = { request_code: 16.6, request_consent: 16.6, approve_grant: 16.6, ask_user: 60 };
+async function humanWait(kind, cond, runDir) {
+  if (cond !== 'grounded') return 0; const sec = HUMAN_S[kind] || 0;
+  await new Promise((r) => setTimeout(r, sec * 1000));
+  fs.appendFileSync(path.join(runDir, 'user-tool.jsonl'), JSON.stringify({ ts: new Date().toISOString(), tool: 'human_wait', for: kind, s: sec }) + '\n');
+  return sec;
+}
+function saveNote(text, runDir) { fs.writeFileSync(path.join(runDir, 'handover-note.txt'), String(text || '')); fs.appendFileSync(path.join(runDir, 'user-tool.jsonl'), JSON.stringify({ ts: new Date().toISOString(), tool: 'save_note', chars: String(text || '').length }) + '\n'); return 'Note saved. It will be given to you when you are resumed.'; }
+module.exports = { askUser, reissueToken, notifyUser, requestCode, requestConsent, approveGrant, orgKey, humanWait, saveNote, HUMAN_S, GIFT, BUSINESS, ESTIMATE_NO };

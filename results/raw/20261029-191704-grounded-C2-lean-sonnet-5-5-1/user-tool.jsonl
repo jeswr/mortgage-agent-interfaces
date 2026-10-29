@@ -1,0 +1,10 @@
+{"ts":"2026-10-29T19:17:22.955Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:17:22.960Z","tool":"approve_grant","org":"jfcu","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:17:39.581Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:17:39.587Z","tool":"approve_grant","org":"nsb","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:17:56.193Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:17:56.196Z","tool":"approve_grant","org":"lgh","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:18:12.824Z","tool":"human_wait","for":"approve_grant","s":16.6}
+{"ts":"2026-10-29T19:18:12.826Z","tool":"approve_grant","org":"bhl","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T19:19:36.880Z","tool":"human_wait","for":"ask_user","s":60}
+{"ts":"2026-10-29T19:19:36.884Z","tool":"ask_user","question":"Sam, please explain where the $8,000.00 deposit made on 09/03/2026 into your Juniper FCU checking account ending 4417 came from (e.g., who sent it or what it was for), and whether it is a gift, loan, sale proceeds, or other income.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

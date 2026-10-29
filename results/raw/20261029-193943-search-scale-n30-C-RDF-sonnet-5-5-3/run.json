@@ -1,0 +1,60 @@
+{
+ "arm": "C-RDF",
+ "model": "claude-sonnet-5-5",
+ "condition": "search-scale-n30",
+ "search_n": 30,
+ "seed": "20261029-193943-search-scale-n30-C-RDF-sonnet-5-5-3",
+ "started": "2026-10-29T19:39:44.439Z",
+ "wall_s": 19.626,
+ "timed_out": false,
+ "runtime_error": null,
+ "success": true,
+ "correct": true,
+ "chosen": "Cascade Bank Mortgage",
+ "answer": {
+  "slug": "cascade-bank-mortgage",
+  "name": "Cascade Bank Mortgage",
+  "product_code": "CBM12-30",
+  "rate_percent": 6.75
+ },
+ "choices_reported": 1,
+ "model_requests": 4,
+ "tokens": {
+  "input": 8,
+  "cache_read": 53815,
+  "cache_creation": 7245,
+  "output": 764,
+  "total": 61832
+ },
+ "tool_calls": 4,
+ "tool_calls_by_name": {
+  "mcp__user__get_authority": 1,
+  "mcp__user__get_credentials": 1,
+  "mcp__search__index_query": 1,
+  "mcp__user__report_choice": 1
+ },
+ "code_api_calls": null,
+ "list_cost_agent_usd": 0.0420175,
+ "list_cost_all_api_usd": 0.0459809,
+ "api_requests_all": 5,
+ "model_s": 17.566,
+ "runtime_startup_s": 1.16,
+ "runtime_tail_s": 3.339,
+ "server": {
+  "web_pages": 0,
+  "web_posts": 0,
+  "api_calls": 0,
+  "index_queries": 1,
+  "injected_latency_s": 0.3
+ },
+ "products_list_lenders": 0,
+ "rate_pages_seen": 0,
+ "index": {
+  "engine": "@sparq-org/sparq@0.1.5",
+  "pages_crawled": 30,
+  "triples": 1506,
+  "build_ms": 446
+ },
+ "cli_cost_usd": 0.084035,
+ "final_message": "Cascade Bank Mortgage: 30-Year Fixed at 6.75%, with a $3,338 monthly payment and $13,100 closing costs."
+}

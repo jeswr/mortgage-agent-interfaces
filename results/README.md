@@ -1,6 +1,6 @@
 # Mortgage agent measurement: what was run
 
-Date of all runs: 2026-10-29. Smoke runs 12:53–13:10 GMT; baseline runs 13:15–13:44 GMT; friction and over-ask runs 13:49–14:35 GMT (see "Additional conditions"); B-full, B-full-code and out-of-limits runs 14:47–15:19 GMT (see "Second round"); realistic-condition runs 15:50–16:26 GMT (see "Third round").
+Date of all runs: 2026-10-29. Smoke runs 12:53–13:10 GMT; baseline runs 13:15–13:44 GMT; friction and over-ask runs 13:49–14:35 GMT (see "Additional conditions"); B-full, B-full-code and out-of-limits runs 14:47–15:19 GMT (see "Second round"); realistic-condition runs 15:50–16:26 GMT (see "Third round"); grounded, grounded-standing and search-scale runs 19:02–20:27 GMT (see "Fourth round" and "Fifth round").
 Machine: macOS 27.0.1, arm64, Node v25.1.0. Everything ran on 127.0.0.1; the only external traffic was the agent runtime's own calls to the Anthropic API, passed through a local logging proxy.
 
 ## Versions
@@ -314,6 +314,183 @@ Server requests include the 3 index-crawl fetches made at start-up in every run,
 - **Discovery is cheap everywhere:** 3–5 model requests and 43k–109k tokens, under 17 s. The index made discovery one SPARQL call in C-RDF (3 requests, 43k tokens), against 4 requests and 58k tokens for C1's three `products.list` calls plus describes. It saves little because the pages are small.
 - **C-RDF against C1.** C-RDF made about one fewer request than C1 (14 vs 15) but used 33% more tokens (590k vs 444k), about 2× the tool-result size, and slightly more wall time (94 vs 88 s). The RDF payloads cost more than they save in this task.
 - **Against baseline.** Realism added requests to every model-orchestrated arm: A 83 → 100, B 46 → 55, B-full 16 → 20, C1 12 → 15. C2 stayed at 2. The ordering of the arms is unchanged.
+
+## Fourth round: `condition=grounded` and `grounded-standing` (2026-10-29, 19:02–20:27 GMT; Sonnet 5.5, n=5 per arm)
+
+`grounded` starts from `realistic` (lender choice, codes, consents and grant approvals all stay) and replaces assumptions with sourced values from the grounding inventory, `agentic-web-measurement-paper-20261029/assumptions.md`. Earlier rows are untouched.
+
+The arms are A, B, B-full, B-full-code, C1, C-RDF, C2 and C2-lean. `grounded-standing` (C1, C-RDF and C2) is identical except that the household approved its grants in advance; see the end of this section.
+
+### What changed
+
+**1. Market Loan Estimate** (`data.js`, "grounded"):
+- **Rate:** 7.25%, from the Freddie Mac PMMS 30-year average of 7.24% on 29 Oct 2026, read through a fetch summary (re-check before citing).
+- **P&I:** for $440,000 over 360 months at 7.25%/12, P&I = $3,001.58.
+- **Escrow:** property tax 0.81% × $550,000 / 12 = $371.25, plus insurance $1,353 / 12 = $112.75, gives escrow = $484.00.
+- **Payment:** total payment = **$3,485.58**.
+- **Closing costs:** 3% of the loan = **$13,200**.
+- **APR:** by the Reg Z actuarial method, solving for the monthly rate i at which the payment's present value equals the amount financed, with prepaid finance charges of 1% origination ($4,400) plus $1,295 lender fees. That gives an amount financed of $434,305 and **APR = 7.382%**.
+- **Cash to close:** $123,200.
+- **Limits:** rate ≤ 7.5%, payment ≤ $3,600, closing costs ≤ $14,500. The Brightpath offer meets them.
+- **The other lenders**, priced the same way: Cascade offers 6.99% with 1.5 points, whose closing costs of $19,800 break the limit (the trap), or 7.625%. Summit offers 7.375% (dearer, fits) or a 7/6 ARM. Distractors are a 15-year at Brightpath and the ARM at Summit.
+- **Out-of-limits logic:** limits now come from the condition (`LIMITS_BY_COND`) in the authority, the grants, the server check and the checker. The out-of-limits condition is unchanged.
+
+**2. Reg Z order.**
+- **Application:** it carries only what the form asks: borrowers, income, assets and the property and loan. There is no documents step before submission: the web step is removed, the agent API's `application.submit` rejects `records` with a pointer to the later step, and the lender bespoke API returns 409 before intent.
+- **Documents:** after the Loan Estimate and intent to proceed, the lender requests documents. These go through a web upload page with "Submit documents to underwriting", the agent API's new `documents.submit`, or the bespoke API's `/documents` then `/document-package`.
+- **Conditions:** only after the documents are submitted does underwriting raise its conditions.
+- **Violation:** a new violation, `documents_before_estimate`, is counted. It was 0 in every run.
+
+**3. Asynchronous Loan Estimate, two sessions.**
+- **Session 1** ends after submission. The prompt adds one paragraph, the same for every arm, asking the agent to `save_note` a handover note and stop.
+- **Between sessions**, the testbed issues the Loan Estimate (`POST /__testbed/issue-le`, excluded from all counts) and expires every OAuth access token, web session and lender API session. Refresh tokens and wallet grants stay valid.
+- **Session 2** is a fresh `claude -p` process with a new browser profile and a prompt that contains the note. It handles intent, documents and conditions. The scenario clock still reads 2026-10-29.
+- **Code arms** split the same way: phase 1 writes `handover-note.json`, and phase 2 runs from it alone.
+- **Cache:** session 2 shares no conversation context with session 1. However, the static prefix (the CLI system prompt and tool definitions) was still read from the prompt cache at session 2's first request: 9–15k tokens, a cache shared across all runs. A nonce in the user tool's description did not prevent this. This matches an always-on agent whose fixed prefix stays warm; it does not model a cold cache.
+
+**4. Two conditions:** the $8,000 deposit explanation (needs the borrowers), and "each borrower's most recent W-2 (tax year 2025)".
+- **W-2 source:** PeoplePay provides W-2s on all three interfaces: the web Tax forms page, bespoke `taxForms`, and agent-API `records.provide` with `record_type: "w2"`.
+- **Authority:** the authority and grants now allow the 2025 W-2s; the PeoplePay grant allows 3 records per person.
+- **Code arms:** the first model call interprets both conditions, returning explanation or documents for each. The code then fetches W-2s for a "documents: w2" plan, and the second model call drafts the explanation.
+
+**5. Page weight and latency.**
+- **Page weight:** every web page carries realistic boilerplate: a utility bar, a mega-menu of about 50 links, quick links, promotional panels, footer link columns and legal text. The median accessibility snapshot of typical pages is **12,413 characters**, against the measured real median of 12,292 (`tmp/cal/measure.cjs`).
+- **Server latency** (`server.js`, `GROUNDED`): 1.85 s per page navigation, 0.67 s per form post or PDF download (the measured medians), and **0.3 s per API call** (assumed). The API-call delay applies to bespoke, agent, JSON-LD, server-to-server and index calls.
+
+**6. Human response time.** The user tool waits 16.6 s for each code, consent or approval (Reese et al., SOUPS 2019, median SMS second-factor time), and 60 s for each question (**assumption**). Waits are logged as `human_wait`.
+
+**7. Cost.** List price is computed from the proxy's token classes per request: Sonnet 5.5 at $2 input, $2.50 5-minute write, $4 1-hour write, $0.10 cache read and $10 output per MTok. It is reported for the agent's own requests and for all API requests, next to the CLI figure.
+
+**Time split.** For each run:
+- model = the sum of all model-request durations;
+- human = the sum of the human waits;
+- network/server = the sum of server handling time (including the injected latency) for agent-facing requests;
+- other = session wall − model − human − network/server.
+
+Other is negative when parallel tool calls overlap.
+
+**Runtime overhead** (`testbed/overhead.js` → `results/overhead.json`), reported separately because persistent agents do not start a process per call:
+- **startup:** process start to the first model request; for the browser arms this includes starting Playwright MCP;
+- **tail:** last agent response to process exit, which includes the CLI's end-of-turn housekeeping calls;
+- **mid-session housekeeping calls.**
+
+Two notes on the measurement:
+- **How sessions are timed:** for agent arms, the session start and end come from the run start and the session walls. For grounded-standing (and any later run), `cli-procs.jsonl` logs every CLI process.
+- **Grounded code arms are estimated:** their processes were not logged, so their overhead is estimated from a calibration of 10 invocations (`results/calibration/`): startup 1.1 s and tail 3.2–3.4 s per process, which covers 1 housekeeping call of about 2.6–2.9 s. The measured grounded-standing C2 overhead, 13.5 s, is higher than this estimate, 9.1 s, so the estimate is probably low.
+
+**C2-lean** is C2 with `--system-prompt "You are a concise assistant. Follow the instructions exactly."`, which replaces the CLI default. I verified this: about 0.6k input tokens against about 9.4k with the default.
+
+### Results (median, IQR)
+
+| Arm | Success | Requests s1 / s2 / total | All API requests | Tokens | List $ (agent) | CLI $ | Wall s | model / human / net-server / other s | Runtime overhead s | Wall without overhead s | Human interactions (types) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| A | 5/5 | 68 / 38 / 107 (105–115) | 113 | 5,584,016 | 1.264 | 2.528 | 730 (729–745) | 389 / 160 / 148 / 40 | 31.2 | 713 | 7: 6 codes, 1 ask |
+| B | 5/5 | 38 / 39 / 77 (70–81) | 81 | 3,554,158 | 0.927 | 1.855 | 542 (539–571) | 305 / 143 / 81 / 21 | 20.9 | 518 | 6: 2 codes, 3 consents, 1 ask |
+| B-full | 5/5 | 14 / 16 / 29 (29–30) | 33 | 866,991 | 0.493 | 0.985 | 334 (328–341) | 196 / 126 / 25 / −13 | 15.3 | 315 | 5: 4 consents, 1 ask |
+| B-full-code | 5/5 | 0 / 2 / 2 | 4 | 21,678 | 0.009 | 0.018 | 165 (165–168) | 12 / 126 / 23 / 4 | 9.1 (est.) | 156 | 5: 4 consents, 1 ask |
+| C1 | 5/5 | 11 / 9 / 20 (19–20) | 22 | 462,516 | 0.330 | 0.659 | 255 (249–255) | 117 / 126 / 13 / −2 | 12.7 | 246 | 5: 4 approvals, 1 ask |
+| C-RDF | 5/5 | 11 / 9 / 20 (19–20) | 22 | 608,058 | 0.492 | 0.984 | 262 (251–281) | 124 / 126 / 11 / −6 | 14.3 | 248 | 5: 4 approvals, 1 ask |
+| C2 | 5/5 | 0 / 2 / 2 | 4 | 21,654 | 0.009 | 0.017 | 152 (152–154) | 11 / 126 / 11 / 4 | 9.1 (est.) | 143 | 5: 4 approvals, 1 ask |
+| C2-lean | 5/5 | 0 / 2 / 2 | 4 | 2,148 | 0.008 | 0.017 | 154 (152–157) | 13 / 126 / 11 / 4 | 8.6 (est.) | 145 | 5: 4 approvals, 1 ask |
+| **standing** C1 | 5/5 | 11 / 9 / 20 (19–20) | 22 | 464,206 | 0.330 | 0.661 | 194 (189–210) | 125 / 60 / 13 / −3 | 15.4 | 177 | **1**: 1 ask |
+| **standing** C-RDF | 5/5 | 13 / 9 / 22 (21–22) | 25 | 744,907 | 0.527 | 1.054 | 220 (198–220) | 152 / 60 / 12 / −3 | 17.9 | 200 | **1**: 1 ask |
+| **standing** C2 | 5/5 | 0 / 2 / 2 | 4 | 21,706 | 0.009 | 0.018 | 94 (90–96) | 16 / 60 / 11 / 4 | 13.5 | 79 | **1**: 1 ask |
+
+Wall is the sum of the two session walls; the gap between sessions is excluded. Human interactions and human seconds are reported separately from model seconds.
+
+The handover notes were 1.3–2.4k characters. Discovery cost (session 1) was 3–4 model requests and 46–63k tokens in every model-run arm.
+
+**C2 against C2-lean, per model call** (10 calls each):
+
+| | Median latency (IQR) | Tokens per call | Input tokens per call |
+|---|---|---|---|
+| C2 | 2.64 s (1.87–3.35) | 10,893 | 10,699 |
+| C2-lean | 2.78 s (1.85–4.48) | 1,121 | 961 |
+
+Removing the CLI system prompt cut tokens per call by 90% but neither latency nor list cost, which were $0.0087 against $0.0083 per run. The default prompt is almost entirely cache reads ($0.10/MTok), and the cost is dominated by output tokens and the 1-hour cache writes.
+
+### Findings
+
+- **All 55 grounded runs succeeded with zero violations,** including 0 documents before the Loan Estimate, in all 40 grounded and 15 grounded-standing runs.
+- **The Reg Z order and the second session add model requests to every agent arm:**
+
+  | Arm | Realistic | Grounded |
+  |---|---|---|
+  | A | 100 | 107 |
+  | B | 55 | 77 |
+  | B-full | 20 | 29 |
+  | C1 | 15 | 20 |
+  | C-RDF | 14 | 20 |
+
+  Session 2 costs 9–39 requests. Most of it is re-orientation (reading the note, the authority and the Loan Estimate), plus new logins (A needs one or two more codes) and token refreshes.
+- **Human time is now a major share of the wall time:** 126 s in every API arm, 83% of C2's wall and 49% of C1's, against 160 s (22%) for A. The common API saves model and machine time but not human time, unless grants are standing.
+- **Standing delegation removes 4 of 5 human interactions and 66 s per run.** C2 drops from 152 to 94 s and C1 from 255 to 194 s; only the deposit question remains.
+- **List-price cost per run:** A $1.26, B $0.93, B-full $0.49, C-RDF $0.49, C1 $0.33, code arms about $0.009. The CLI's own figure is again exactly 2× list price for the agent arms (see assumptions.md row 59).
+- **Real page weight and latency hit the website arm hardest:** 148 s of A's wall is network and server time, against 11–25 s for the API arms.
+- **The runtime's own overhead is 9–31 s per run:** about 2.2–7.4 s of start-up and 6–10 s of tail housekeeping per session. Persistent agents would not pay it.
+- **First agent-API denials.** In 6 of the 55 runs the server-side check refused a call:
+  - in C1 (two runs), session 2 re-requested payslips it had already obtained, and the 3-records-per-person cap refused them (once also with a subject mismatch);
+  - in 4 grounded-standing C-RDF runs, a first `application.submit` used the wrong token.
+
+  All six runs recovered and succeeded. None of these was an attempt outside the authority: the guards fired on benign retries.
+
+## Fifth round: `search-scale` (2026-10-29, 19:31–19:53 GMT; Sonnet 5.5, n=3 per arm per N)
+
+**Task.** Discovery only; the run ends at the choice. A public registry of N licensed lenders lists each lender's website and agent-API endpoint (`/directory`, 25 lenders per page). The agent must find the lender with the lowest 30-year fixed rate whose published figures fit the limits (grounded limits) and report it with `report_choice`.
+
+**Lenders** (`testbed/search-data.js`, deterministic per N):
+- **Rates:** 30-year fixed rates of 6.75–7.75% in 0.125 steps, around 7.25% ± 0.5 pp.
+- **Costs:** closing costs of 2–4% of the loan (plus points). Payment = P&I + $484 escrow.
+- **Traps:** about 20% of lenders also offer a rate 0.375 pp lower, bought with 1.5–2.5 points, whose closing costs break the $14,500 limit. At least one trap sits below the answer.
+- **Distractors:** 15-year and 7/6 ARM products.
+- **Uniqueness:** the generator retries until exactly one lender has the lowest fitting rate.
+- **Layouts:** four rates-page layouts (table, cards, definition list, prose), each with the grounded page weight (about 11k-character snapshots) and 1.85 s per navigation.
+
+**Separate origins.** Each lender's website is its own origin (`<slug>.localhost`), so in-page scripts cannot read other lenders' pages. I added this after the first A smoke run, which read all lenders through same-origin `fetch()` from the registry page, an artefact of hosting every lender on one origin. APIs and the index stay on 127.0.0.1.
+
+**Arms:**
+- **A:** browser only.
+- **C1:** `agent_request` against the registry's `registry.list` and each lender's public `products.list`, 0.3 s per call.
+- **C-RDF:** `index_query` against a pre-built `@sparq-org/sparq` index of all N lenders' JSON-LD. The index is crawled at server start-up, excluded from the run and timed separately.
+- **C2:** code making the same calls as C1, with 0 model calls.
+
+N = 3, 10 and 30 for all arms, plus 100 for C1 and C-RDF, since N = 30 ran cleanly.
+
+| Arm | N | Correct | Model requests | Tokens | List $ | Wall s | Pages / API calls |
+|---|---|---|---|---|---|---|---|
+| A | 3 | 3/3 | 11 | 259,203 | 0.088 | 41 | 5 / 0 |
+| A | 10 | 3/3 | 18 | 493,720 | 0.148 | 78 | 12 / 0 |
+| A | 30 | 3/3 | 18 | 622,106 | 0.341 | 201 | 63 / 0 |
+| C1 | 3 | 3/3 | 5 | 66,374 | 0.036 | 27 | 0 / 4 |
+| C1 | 10 | 3/3 | 5 | 77,025 | 0.056 | 21 | 0 / 11 |
+| C1 | 30 | 3/3 | 6 | 125,235 | 0.141 | 33 | 0 / 33 |
+| C1 | 100 | 3/3 | 8 | 302,335 | 0.423 | 96 | 0 / 104 |
+| C-RDF | 3 | 3/3 | 4 | 52,862 | 0.032 | 23 | 0 / 1 query |
+| C-RDF | 10 | 3/3 | 4 | 64,123 | 0.046 | 19 | 0 / 1 query |
+| C-RDF | 30 | 3/3 | 4 | 62,033 | 0.044 | 20 | 0 / 1 query |
+| C-RDF | 100 | 3/3 | 4 | 61,288 | 0.051 | 19 | 0 / 1 query |
+| C2 | 3 | 3/3 | 0 | 0 | 0 | 1.3 | 0 / 4 |
+| C2 | 10 | 3/3 | 0 | 0 | 0 | 3.4 | 0 / 11 |
+| C2 | 30 | 3/3 | 0 | 0 | 0 | 9.7 | 0 / 31 |
+
+**Growth per extra lender** (least squares over all runs; `results/search-summary.csv`):
+
+| Arm | Model requests | Tokens | List $ | Wall s |
+|---|---|---|---|---|
+| A | +0.46 | +23,100 | +0.0096 | +5.5 |
+| C1 | +0.03 | +2,600 | +0.0040 | +0.76 |
+| C-RDF | ~0 | ~+200 | ~0 | ~0 |
+| C2 | 0 | 0 | 0 | +0.31 (API latency) |
+
+**Index build time**, local, crawl excluded from the runs: 0.28–0.45 s for N = 3–30 and 0.80–0.90 s for N = 100, with sparq 0.1.5 plus jsonld.
+
+**Search findings.**
+- Every arm chose correctly in all 42 runs; no trap was taken.
+- **A:** time and cost grow linearly with N at about 5.5 s and $0.01 per lender, so 30 lenders cost about 3.3 minutes and $0.34. A keeps requests low by issuing several navigate and evaluate calls per turn, and by extracting page text with `browser_evaluate` rather than full snapshots.
+- **C1:** grows about 7× more slowly in time and 2.4× more slowly in list cost. At N = 100 it takes 96 s and $0.42, because every products.list result enters the context.
+- **C-RDF:** flat. One SPARQL query answers N = 100 in about 19 s and $0.05.
+- **C2:** grows only with API latency.
+- **The author's expectation holds:** search is where structure and an index pay off. With three lenders discovery cost about the same in every arm; at 30 the website arm costs 8× C-RDF in money and 10× in time.
 
 ## Hidden calls (limitation, measured)
 

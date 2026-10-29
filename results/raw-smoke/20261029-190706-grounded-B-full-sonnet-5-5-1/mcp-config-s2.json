@@ -1,0 +1,24 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw-smoke/20261029-190706-grounded-B-full-sonnet-5-5-1",
+    "cond=grounded",
+    "seed=20261029-190706-grounded-B-full-sonnet-5-5-1",
+    "human=consent",
+    "nonce=s2"
+   ]
+  },
+  "http": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-http.js",
+    "./results/raw-smoke/20261029-190706-grounded-B-full-sonnet-5-5-1",
+    "http://127.0.0.1:7201,http://127.0.0.1:7202,http://127.0.0.1:7203,http://127.0.0.1:7204,http://127.0.0.1:7205,http://127.0.0.1:7206",
+    "upload"
+   ]
+  }
+ }
+}

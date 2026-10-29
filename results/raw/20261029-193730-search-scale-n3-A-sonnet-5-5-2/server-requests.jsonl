@@ -1,0 +1,8 @@
+{"ts":"2026-10-29T19:37:30.714Z","host":"127.0.0.1:7261","method":"GET","path":"/lenders/sandy-river-credit-union/rates","iface":"crawl","status":200,"ms":19,"delay_ms":0}
+{"ts":"2026-10-29T19:37:30.739Z","host":"127.0.0.1:7261","method":"GET","path":"/lenders/steelhead-mortgage-company/rates","iface":"crawl","status":200,"ms":1,"delay_ms":0}
+{"ts":"2026-10-29T19:37:30.744Z","host":"127.0.0.1:7261","method":"GET","path":"/lenders/larch-lending/rates","iface":"crawl","status":200,"ms":1,"delay_ms":0}
+{"ts":"2026-10-29T19:37:38.203Z","host":"127.0.0.1:7261","method":"GET","path":"/directory","iface":"web","status":200,"ms":1856,"delay_ms":1850}
+{"ts":"2026-10-29T19:37:43.937Z","host":"sandy-river-credit-union.localhost:7261","method":"GET","path":"/","iface":"web","status":200,"ms":1857,"delay_ms":1850}
+{"ts":"2026-10-29T19:37:50.333Z","host":"sandy-river-credit-union.localhost:7261","method":"GET","path":"/rates","iface":"web","status":200,"ms":1855,"delay_ms":1850}
+{"ts":"2026-10-29T19:37:54.725Z","host":"steelhead-mortgage-company.localhost:7261","method":"GET","path":"/rates","iface":"web","status":200,"ms":1854,"delay_ms":1850}
+{"ts":"2026-10-29T19:37:57.202Z","host":"larch-lending.localhost:7261","method":"GET","path":"/rates","iface":"web","status":200,"ms":1853,"delay_ms":1850}

@@ -1,0 +1,14 @@
+{
+ "text": "Mortgage search instructions from Sam and Nadia Okafor-Reyes (2026-10-29).\nThe published figures for this loan must fit ALL of these limits:\n- interest rate at most 7.5%\n- monthly payment at most $3,600\n- closing costs at most $14,500\nOnly 30-year fixed-rate loans. Report the single best lender; do not apply or share any personal data.",
+ "machine_readable": {
+  "limits": {
+   "max_rate_percent": 7.5,
+   "max_monthly_payment": 3600,
+   "max_closing_costs": 14500
+  },
+  "product": {
+   "term_years": 30,
+   "rate_type": "fixed"
+  }
+ }
+}

@@ -1,0 +1,12 @@
+{"ts":"2026-10-29T19:31:53.157Z","method":"GET","path":"/lenders/cedar-mortgage-group/rates","iface":"crawl","status":200,"ms":24,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.187Z","method":"GET","path":"/lenders/harbor-bank-mortgage/rates","iface":"crawl","status":200,"ms":2,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.192Z","method":"GET","path":"/lenders/cascade-mortgage-group/rates","iface":"crawl","status":200,"ms":1,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.195Z","method":"GET","path":"/lenders/pioneer-home-finance/rates","iface":"crawl","status":200,"ms":0,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.201Z","method":"GET","path":"/lenders/sandy-river-mortgage/rates","iface":"crawl","status":200,"ms":1,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.204Z","method":"GET","path":"/lenders/evergreen-funding/rates","iface":"crawl","status":200,"ms":0,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.210Z","method":"GET","path":"/lenders/timberline-home-loans/rates","iface":"crawl","status":200,"ms":0,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.213Z","method":"GET","path":"/lenders/willamette-mortgage-company/rates","iface":"crawl","status":200,"ms":0,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.217Z","method":"GET","path":"/lenders/timberline-credit-union/rates","iface":"crawl","status":200,"ms":0,"delay_ms":0}
+{"ts":"2026-10-29T19:31:53.219Z","method":"GET","path":"/lenders/alder-funding/rates","iface":"crawl","status":200,"ms":0,"delay_ms":0}
+{"ts":"2026-10-29T19:32:48.660Z","method":"POST","path":"/index/sparql","iface":"index","status":200,"ms":338,"delay_ms":300}
+{"ts":"2026-10-29T19:32:56.188Z","method":"POST","path":"/index/sparql","iface":"index","status":200,"ms":307,"delay_ms":300}
