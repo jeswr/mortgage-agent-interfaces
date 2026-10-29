@@ -1,0 +1,110 @@
+[
+ {
+  "label": "bank login page (with cookie overlay)",
+  "url": "http://127.0.0.1:7901/accounts",
+  "wall_load_s": 0.035,
+  "requests": 1,
+  "doc_bytes": 2572,
+  "html_chars": 2260,
+  "snapshot_chars": 982
+ },
+ {
+  "label": "bank accounts (after login POST)",
+  "url": "http://127.0.0.1:7901/accounts",
+  "wall_load_s": 0.103,
+  "requests": 2,
+  "doc_bytes": 1863,
+  "html_chars": 1566,
+  "snapshot_chars": 1421
+ },
+ {
+  "label": "bank account transactions",
+  "url": "http://127.0.0.1:7901/accounts/jfcu-4417",
+  "wall_load_s": 0.007,
+  "requests": 1,
+  "doc_bytes": 2634,
+  "html_chars": 2330,
+  "snapshot_chars": 2916
+ },
+ {
+  "label": "bank statements search",
+  "url": "http://127.0.0.1:7901/statements?account=jfcu-4417&from=2026-08-01&to=2026-10-29",
+  "wall_load_s": 0.018,
+  "requests": 1,
+  "doc_bytes": 2304,
+  "html_chars": 1998,
+  "snapshot_chars": 1527
+ },
+ {
+  "label": "bank statement view",
+  "url": "http://127.0.0.1:7901/statements/JFCU-4417-202609",
+  "wall_load_s": 0.006,
+  "requests": 1,
+  "doc_bytes": 3009,
+  "html_chars": 2698,
+  "snapshot_chars": 3438
+ },
+ {
+  "label": "lender dashboard (after login POST)",
+  "url": "http://127.0.0.1:7904/dashboard",
+  "wall_load_s": 0.048,
+  "requests": 2,
+  "doc_bytes": 1477,
+  "html_chars": 1165,
+  "snapshot_chars": 649
+ },
+ {
+  "label": "lender apply/borrowers",
+  "url": "http://127.0.0.1:7904/apply/borrowers",
+  "wall_load_s": 0.007,
+  "requests": 1,
+  "doc_bytes": 3785,
+  "html_chars": 3450,
+  "snapshot_chars": 2212
+ },
+ {
+  "label": "lender apply/income",
+  "url": "http://127.0.0.1:7904/apply/income",
+  "wall_load_s": 0.009,
+  "requests": 1,
+  "doc_bytes": 3170,
+  "html_chars": 2835,
+  "snapshot_chars": 1859
+ },
+ {
+  "label": "lender apply/assets",
+  "url": "http://127.0.0.1:7904/apply/assets",
+  "wall_load_s": 0.007,
+  "requests": 1,
+  "doc_bytes": 4677,
+  "html_chars": 4357,
+  "snapshot_chars": 3898
+ },
+ {
+  "label": "lender apply/property",
+  "url": "http://127.0.0.1:7904/apply/property",
+  "wall_load_s": 0.006,
+  "requests": 1,
+  "doc_bytes": 2997,
+  "html_chars": 2662,
+  "snapshot_chars": 1648
+ },
+ {
+  "label": "lender apply/documents",
+  "url": "http://127.0.0.1:7904/apply/documents",
+  "wall_load_s": 0.009,
+  "requests": 1,
+  "doc_bytes": 2334,
+  "html_chars": 2002,
+  "snapshot_chars": 1365
+ },
+ {
+  "label": "lender apply/review",
+  "url": "http://127.0.0.1:7904/apply/review",
+  "wall_load_s": 0.005,
+  "requests": 1,
+  "doc_bytes": 2249,
+  "html_chars": 1914,
+  "snapshot_chars": 1536
+ }
+]

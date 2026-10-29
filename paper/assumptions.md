@@ -7,7 +7,7 @@ This file inventories every assumption I found in the paper (`main.tex`), the re
 **Grounding labels.**
 - **S**: grounded in a source I opened on 29 Oct 2026 (URL given).
 - **S(survey)**: the survey's author opened the source; I did not reopen it.
-- **M**: measured from the run logs or by my own measurement. The scripts are in `tmp/`.
+- **M**: measured from the run logs or by my own measurement. The scripts are in `analysis/`.
 - **R**: reasoned; no source exists.
 - **A**: arbitrary (stress value). It is a design choice, not a claim about the world.
 - **U**: unverified.
@@ -63,7 +63,7 @@ This file inventories every assumption I found in the paper (`main.tex`), the re
 | 24 | Cookie banner | A blocking overlay on every site until a choice is made | `server.js:122-126` | S(survey), partial: consent scripts appeared on 3 of 13 bank login pages. Whether real banners block the page is **U**. | Probably ↓web (harsher than typical), but it costs one click per site. |
 | 25 | Web navigation friction | 10 transactions or 8 payslips per page; Juniper's statement search defaults to the last 30 days; Northgate uses a "statement covering this date" picker | `server.js:157,169,173,202` | A | Adds web steps. |
 | 26 | Lender application | 6 steps, 3 consent boxes, PDF upload | `server.js:230-291` | S(survey): the real URLA is longer and adds identity, credit and e-consent steps, often with embedded account linking. | ↑web, ↑B (the lender website is shorter than real). |
-| 27 | Page weight | Sandbox pages are 1-4 KB of HTML with no subresources (1-2 requests), load in under 0.1 s, and give 0.6-3.9k-character snapshots | `server.js:120-131` | M (`tmp/sandbox_pages.json`). 13 real bank and lender pages loaded with the same Playwright build had median TTFB 0.67 s, DOMContentLoaded 1.85 s, load 5.49 s, 109 requests and 12.3k-character accessibility snapshots (`tmp/real_pages.json`). HTTP Archive gives a median desktop page of 2,652 KB and 71 requests ([Web Almanac 2024](https://almanac.httparchive.org/en/2024/page-weight)). | ↑web strongly, for both time and tokens (§3.2). |
+| 27 | Page weight | Sandbox pages are 1-4 KB of HTML with no subresources (1-2 requests), load in under 0.1 s, and give 0.6-3.9k-character snapshots | `server.js:120-131` | M (`analysis/sandbox_pages.json`). 13 real bank and lender pages loaded with the same Playwright build had median TTFB 0.67 s, DOMContentLoaded 1.85 s, load 5.49 s, 109 requests and 12.3k-character accessibility snapshots (`analysis/real_pages.json`). HTTP Archive gives a median desktop page of 2,652 KB and 71 requests ([Web Almanac 2024](https://almanac.httparchive.org/en/2024/page-weight)). | ↑web strongly, for both time and tokens (§3.2). |
 | 28 | No bot management | no CAPTCHAs, fingerprinting or Akamai | n/a | S(survey): 10 of 13 big-bank logins set Akamai Bot Manager cookies. | ↑web (real agents may be blocked). |
 | 29 | Per-organisation APIs exist for consumers and are clean | 3 (or 4) different styles, plain-text docs, no rate limits | `server.js:331-357,470-491` | S(survey): hypothetical. Bank data reaches third parties through aggregators, and no lender offers a consumer apply API. | ↑B, ↑B-full. B-full does not price discovery or maintenance. |
 | 30 | HTTP tool truncates bodies | 20,000 characters | `mcp-http.js:11,24` | A | Caps B and B-full token growth. |
@@ -153,7 +153,7 @@ This file inventories every assumption I found in the paper (`main.tex`), the re
 
 All scripts read `agentic-web-measurement-20261029/results/` read-only. Medians are over runs, and Sonnet 5.5 unless stated.
 
-### 3.1 The fixed 5 s Loan Estimate delay (`tmp/delay_sensitivity.py` → `tmp/delay_sensitivity.csv`, `tmp/delay_rows.json`)
+### 3.1 The fixed 5 s Loan Estimate delay (`analysis/delay_sensitivity.py` → `analysis/delay_sensitivity.csv`, `analysis/delay_rows.json`)
 
 **Method.** For each run, the script finds three times:
 - the submission time (`state.json`);
@@ -186,7 +186,7 @@ One out-of-limits A run had a 122 s model call inside the window. Its 133 s figu
 - For the code arms, the delay plus the 2 s polling interval is about a quarter of the 22-23 s. Without it they would take about 16-17 s, mostly two CLI start-ups and two model calls. The paper's sentence on code-arm time is right in kind; this gives it a number.
 - C1's model latency hides most of the delay: its first status call arrives after a median of 3.1 s.
 
-### 3.2 Real network latency and real page weights (`tmp/network_sensitivity.py`, `tmp/pagemeasure.cjs`, `tmp/sandboxpages.cjs`)
+### 3.2 Real network latency and real page weights (`analysis/network_sensitivity.py`, `analysis/pagemeasure.cjs`, `analysis/sandboxpages.cjs`)
 
 **Own measurement (29 Oct 2026, this machine, one cold-cache attempt per URL, same `playwright-core` build the runs used).** I loaded 13 public pages, all of which returned 200: the home pages of Chase, Wells Fargo, BofA, U.S. Bank, Navy Federal, Ally, Citi and Capital One; the mortgage-rate pages of Chase, Wells Fargo, BofA and U.S. Bank; and the MyADP sign-in page. Medians:
 - TTFB 0.67 s, DOMContentLoaded 1.85 s, load event 5.49 s (range 2.4-9.1 s);
@@ -224,7 +224,7 @@ Whether Playwright MCP waits for DOMContentLoaded or for load is **U**. Warm-cac
 - it assumes every browser result is a full-page snapshot;
 - it assumes an unchanged number of requests.
 
-### 3.3 Price-weighted cost against the CLI cost and raw tokens (`tmp/cost_latency.py` → `tmp/cost_rows.json`, `tmp/cost_latency.out`)
+### 3.3 Price-weighted cost against the CLI cost and raw tokens (`analysis/cost_latency.py` → `analysis/cost_rows.json`, `analysis/cost_latency.out`)
 
 List-price cost from the proxy's token classes, agent calls only, baseline:
 
@@ -246,7 +246,7 @@ The code arms' ratios are below 2 because the hidden calls are included in the C
 - **The paper's cost paragraph should read: about $0.85 for websites, $0.30 for four APIs, $0.21 for the common API and $0.01-0.02 for code (Sonnet list price).**
 - Price-weighting also changes the size of the website gap: A/C1 is 12× in raw tokens but 4.1× in dollars, because 98% of A's tokens are cheap cache reads. The B-full/C1 ratio barely moves (1.45× in tokens, 1.44× in dollars).
 
-### 3.4 Instant humans (`tmp/human_latency.py` → `tmp/human_latency.out`)
+### 3.4 Instant humans (`analysis/human_latency.py` → `analysis/human_latency.out`)
 
 **Assumption.** Each code, consent or approval takes 16.6 s, the median SMS second-factor time (Reese et al. 2019) and a floor for a person who is ready. Consents and approvals are assumed equal (**U**). An `ask_user` answer takes 60 s (**A**).
 

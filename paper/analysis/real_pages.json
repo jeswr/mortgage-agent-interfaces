@@ -1,0 +1,223 @@
+[
+ {
+  "url": "https://www.chase.com/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 3.024,
+  "requests": 49,
+  "transfer_bytes": 672390,
+  "nav": {
+   "ttfb": 895.5,
+   "dcl": 1386.2999999970198,
+   "load": 3021,
+   "fcp": 1524,
+   "doc_bytes": 52006
+  },
+  "snapshot_chars": 14426,
+  "title": "Credit Card, Mortgage, Banking, Auto | Chase Online | Chase.com"
+ },
+ {
+  "url": "https://www.wellsfargo.com/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 5.286,
+  "requests": 88,
+  "transfer_bytes": 499201,
+  "nav": {
+   "ttfb": 638.9000000059605,
+   "dcl": 2568.7999999970198,
+   "load": 5284,
+   "fcp": 1404,
+   "doc_bytes": 18521
+  },
+  "snapshot_chars": 11561,
+  "title": "Wells Fargo Bank | Financial Services & Online Banking"
+ },
+ {
+  "url": "https://www.bankofamerica.com/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 9.057,
+  "requests": 182,
+  "transfer_bytes": 257412,
+  "nav": {
+   "ttfb": 776.7999999970198,
+   "dcl": 2685.4000000059605,
+   "load": 9055.20000000298,
+   "fcp": 3160,
+   "doc_bytes": 52082
+  },
+  "snapshot_chars": 16058,
+  "title": "Bank of America - Banking, Credit Cards, Loans and Merrill Investing"
+ },
+ {
+  "url": "https://www.usbank.com/index.html",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 5.487,
+  "requests": 187,
+  "transfer_bytes": 1744940,
+  "nav": {
+   "ttfb": 654.2999999970198,
+   "dcl": 1845.0999999940395,
+   "load": 5485.5,
+   "fcp": 3972,
+   "doc_bytes": 30925
+  },
+  "snapshot_chars": 10873,
+  "title": "Personal Banking, Credit Cards, Loans & Investing | U.S. Bank"
+ },
+ {
+  "url": "https://www.navyfederal.org/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 5.444,
+  "requests": 146,
+  "transfer_bytes": 842340,
+  "nav": {
+   "ttfb": 628.4000000059605,
+   "dcl": 1515.0999999940395,
+   "load": 5439.5,
+   "fcp": 2636,
+   "doc_bytes": 25903
+  },
+  "snapshot_chars": 11760,
+  "title": "Navy Federal Credit Union | Banking, Loans, Mortgages & Credit Cards | Navy Federal Credit Union"
+ },
+ {
+  "url": "https://www.ally.com/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 6.834,
+  "requests": 103,
+  "transfer_bytes": 1761484,
+  "nav": {
+   "ttfb": 1353.4000000059605,
+   "dcl": 2808.9000000059605,
+   "load": 6832,
+   "fcp": 2804,
+   "doc_bytes": 41903
+  },
+  "snapshot_chars": 12824,
+  "title": "Banking, Investing & Auto Finance | Ally"
+ },
+ {
+  "url": "https://www.citi.com/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 6.143,
+  "requests": 113,
+  "transfer_bytes": 1893469,
+  "nav": {
+   "ttfb": 545,
+   "dcl": 1735.0999999940395,
+   "load": 6140.9000000059605,
+   "fcp": 1760,
+   "doc_bytes": 42765
+  },
+  "snapshot_chars": 6474,
+  "title": "Online Banking, Mortgages, Personal Loans, Investing | Citi.com"
+ },
+ {
+  "url": "https://www.capitalone.com/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 7.306,
+  "requests": 352,
+  "transfer_bytes": 1244591,
+  "nav": {
+   "ttfb": 567.6000000089407,
+   "dcl": 1778.5,
+   "load": 7304,
+   "fcp": 1796,
+   "doc_bytes": 118440
+  },
+  "snapshot_chars": 11323,
+  "title": "Capital One | Credit Cards, Checking, Savings & Auto Loans"
+ },
+ {
+  "url": "https://www.chase.com/personal/mortgage/mortgage-rates",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 2.393,
+  "requests": 85,
+  "transfer_bytes": 1745791,
+  "nav": {
+   "ttfb": 722.4000000059605,
+   "dcl": 1593.9000000059605,
+   "load": 2391.1000000089407,
+   "fcp": 1628,
+   "doc_bytes": 56668
+  },
+  "snapshot_chars": 20784,
+  "title": "Current Mortgage Interest Rates | Chase"
+ },
+ {
+  "url": "https://www.wellsfargo.com/mortgage/rates/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 2.711,
+  "requests": 33,
+  "transfer_bytes": 1773001,
+  "nav": {
+   "ttfb": 813.8999999910593,
+   "dcl": 2119.2000000029802,
+   "load": 2709.7000000029802,
+   "fcp": 1276,
+   "doc_bytes": 11876
+  },
+  "snapshot_chars": 7371,
+  "title": "Today's mortgage rates | Wells Fargo"
+ },
+ {
+  "url": "https://www.bankofamerica.com/mortgage/mortgage-rates/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 8.037,
+  "requests": 109,
+  "transfer_bytes": 91004,
+  "nav": {
+   "ttfb": 668.9000000059605,
+   "dcl": 2829.2000000029802,
+   "load": 8034.4000000059605,
+   "fcp": 1780,
+   "doc_bytes": 53141
+  },
+  "snapshot_chars": 16030,
+  "title": "Mortgage Rates - Today's Rates from Bank of America"
+ },
+ {
+  "url": "https://www.usbank.com/home-loans/mortgage/mortgage-rates.html",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 5.547,
+  "requests": 167,
+  "transfer_bytes": 1697722,
+  "nav": {
+   "ttfb": 706.9000000059605,
+   "dcl": 2232.4000000059605,
+   "load": 5544.70000000298,
+   "fcp": 2848,
+   "doc_bytes": 30615
+  },
+  "snapshot_chars": 29775,
+  "title": "Current mortgage rates | Mortgage rates today | U.S. Bank"
+ },
+ {
+  "url": "https://my.adp.com/",
+  "status": 200,
+  "err": null,
+  "wall_load_s": 5.446,
+  "requests": 97,
+  "transfer_bytes": 745648,
+  "nav": {
+   "ttfb": 465.59999999403954,
+   "dcl": 1605.199999988079,
+   "load": 3517,
+   "fcp": 1460,
+   "doc_bytes": 4168
+  },
+  "snapshot_chars": 390,
+  "title": "Sign in | MyADP"
+ }
+]

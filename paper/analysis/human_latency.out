@@ -1,0 +1,7 @@
+arm,wall_med,codes+consents+approvals_med,ask_med,wall_floor_med,wall_away_med,human_share_floor
+C2,21.8,4,1,148.2,621.8,0.85
+C-RDF,94.1,4,1,220.5,694.1,0.57
+C1,87.6,4,1,214.0,687.6,0.59
+B-full,105.6,4,1,232.0,705.6,0.54
+A,312.3,5,1,455.3,1037.8,0.31
+B,257.0,4,1,383.4,857.0,0.33
