@@ -1,5 +1,5 @@
 % assumptions-table.tex -- \input{assumptions-table} after adding \usepackage{longtable} (booktabs, hyperref already loaded).
-% Full inventory, file:line locations and scripts: assumptions.md and analysis/ in this folder.
+% Full inventory, file:line locations and scripts: assumptions.md and tmp/ in this folder.
 % Labels in the table: S = source opened 29 Oct 2026; S(survey) = source opened for realism-survey.md;
 % M = measured from the run logs or our own measurement; A = arbitrary (stress value); U = unverified.
 %
@@ -23,12 +23,8 @@ Assumption (value) & Where & Grounding & Effect on results \tabularnewline
 \RR Two months of statements for 4 accounts; 2 payslips each; no W-2s & \RR\texttt{data.js:131} & \RR S: Fannie Mae requires ``the most recent full two-month period'' of statements and a paystub within 30 days with YTD earnings; W-2s for 1--2 years are omitted (B3-4.2-01, B3-3.1-02) & \RR Fewer documents; favours arms that move each file (A, B) \tabularnewline
 \RR One condition: the \$8{,}000 deposit, answered in writing & \RR\texttt{data.js:82} & \RR S: it exceeds 50\% of monthly qualifying income (\$7{,}692), Fannie Mae's ``large deposit'' test (B3-4.2-02); one condition only is A & \RR Real loans raise more; web costs are a lower bound \tabularnewline
 \RR Documents submitted before the Loan Estimate & \RR\texttt{server.js:274} & \RR S(survey): Reg~Z bars requiring verification documents first (12 CFR 1026.19(e)(2)(iii)) & \RR A compliant order adds a wait cycle (1--4 requests, M) \tabularnewline
-\multicolumn{4}{@{}l}{\emph{Loan Estimate and limits}}\tabularnewline
+\multicolumn{4}{@{}l}{\emph{Lender steps}}\tabularnewline
 \RR Loan Estimate after a fixed 5\,s & \RR\texttt{server.js:220} & \RR S: due within 3 business days (CFPB); M: see text & \RR 0--4 requests; about 6\,s of code-run wall time \tabularnewline
-\RR Rate 6.25\%; limit 6.5\% & \RR\texttt{data.js:149}, \texttt{data.js:181} & \RR S: Freddie Mac 30-year average 7.24\% on 29 Oct 2026, 6.17\% a year earlier & \RR None on cost; within-limit offer optimistic \tabularnewline
-\RR Escrow \$333.25 a month (tax 0.59\%, insurance \$774 a year) & \RR\texttt{data.js:150} & \RR S: Oregon tax 0.81\% (Tax Foundation) and insurance \$1{,}353 a year (ValuePenguin) give \$484, so the payment is \$3{,}193, above the \$3{,}100 limit & \RR The baseline ``within limits'' outcome depends on it \tabularnewline
-\RR Closing costs \$12{,}850 (2.9\% of loan) & \RR\texttt{data.js:152} & \RR S, partial: 2025 title and settlement costs averaged 1.04\% of price (LodeStar), excluding lender fees; total U & \RR None \tabularnewline
-\RR Out-of-limits estimate: 6.875\% with escrow set to 0 & \RR\texttt{data.js:155} & \RR A, so that only the rate breaks a limit & \RR Isolates the rate check \tabularnewline
 \RR Three lenders compared on advertised example figures & \RR\texttt{data.js:174} & \RR S: CFPB advises ``at least three Loan Estimates''; advertised rates are not offers & \RR Discovery cost (3--5 requests) is a lower bound \tabularnewline
 \multicolumn{4}{@{}l}{\emph{Interfaces and environment}}\tabularnewline
 \RR Localhost, 1--4\,KB pages, no subresources, about 0.01\,s per page & \RR\texttt{server.js:920} & \RR M: 13 real bank and lender pages had median TTFB 0.67\,s, DOMContentLoaded 1.85\,s, load 5.49\,s, 109 requests and 7.7$\times$ larger accessibility snapshots; HTTP Archive median 2.65\,MB and 71 requests & \RR Web time and tokens are lower bounds (see text) \tabularnewline

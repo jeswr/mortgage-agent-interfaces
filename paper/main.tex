@@ -152,7 +152,7 @@ C2 common API + code & 2 (2--2) & 0.02M & 22 & 5 & 4 approvals, 1 question \\
 
 \section{Assumptions and sensitivity}\label{sec:assumptions}
 
-Table~\ref{tab:assumptions} lists the main assumptions of the testbed and the measurement, where each is set, how it is grounded, and what it affects; the full inventory of 71 assumptions, with code locations and the analysis scripts, is in the artifact~\cite{artifact}. Sources include the Fannie Mae Selling Guide~\cite{fanniemaeassets,fanniemaedeposits}, the CFPB~\cite{cfpbmultiple,ecfr1026}, Freddie Mac's mortgage rate survey~\cite{pmms}, Oregon tax and insurance averages~\cite{taxfoundation,valuepenguin}, closing-cost data~\cite{lodestar}, the HTTP Archive~\cite{webalmanac}, a usability study of two-factor authentication~\cite{reese2fa}, session-timeout guidance~\cite{nist80063b} and Anthropic's prices~\cite{anthropicpricing}. Two assumptions make the baseline offer optimistic rather than typical: its 6.25\% rate is about one percentage point below the 7.24\% national average on the day of the runs, and its escrow is low, so with grounded taxes and insurance the payment would break the borrowers' limit. Neither affects the cost measurements, but in practice the out-of-limits case would be the more common outcome.
+Table~\ref{tab:assumptions} lists the assumptions that bear on the metrics we report (model requests, tokens and cost, wall time, human interventions and success), where each is set, how it is grounded, and what it affects; the full inventory of 71 assumptions, with code locations and the analysis scripts, is in the artifact~\cite{artifact}. Sources include the Fannie Mae Selling Guide~\cite{fanniemaeassets,fanniemaedeposits}, the CFPB~\cite{cfpbmultiple,ecfr1026}, the HTTP Archive~\cite{webalmanac}, a usability study of two-factor authentication~\cite{reese2fa}, session-timeout guidance~\cite{nist80063b} and Anthropic's prices~\cite{anthropicpricing}.
 
 \input{assumptions-table}
 
@@ -214,12 +214,8 @@ The research question and framing are the author's. The experiment was designed,
 \bibitem{anthropicpricing} Anthropic. Pricing. \url{https://platform.claude.com/docs/en/about-claude/pricing}, accessed 29 October 2026.
 \bibitem{cfpbmultiple} Consumer Financial Protection Bureau. Request and review multiple Loan Estimates. \url{https://www.consumerfinance.gov/owning-a-home/compare/request-and-review-multiple-loan-estimates/}.
 \bibitem{fanniemaedeposits} Fannie Mae. Selling Guide B3-4.2-02, Depository accounts. October 2026.
-\bibitem{lodestar} National Mortgage News. Purchase mortgage closing costs dipped in 2025 (LodeStar data). 2026.
 \bibitem{nist80063b} NIST. Digital identity guidelines: authentication and authenticator management, SP 800-63B-4. 2025.
-\bibitem{pmms} Freddie Mac. Primary Mortgage Market Survey, 29 October 2026. \url{https://www.freddiemac.com/pmms}.
 \bibitem{reese2fa} K.~Reese et al. A usability study of five two-factor authentication methods. In \emph{Proc.\ SOUPS}, 2019.
-\bibitem{taxfoundation} Tax Foundation. Oregon tax rates and rankings. \url{https://taxfoundation.org/state/oregon}, accessed October 2026.
-\bibitem{valuepenguin} ValuePenguin. Cheapest homeowners insurance in Oregon. \url{https://www.valuepenguin.com/best-cheap-homeowners-insurance-oregon}, accessed October 2026.
 \bibitem{webalmanac} HTTP Archive. Web Almanac 2024: Page weight; Web Almanac 2025: Performance. \url{https://almanac.httparchive.org}.
 \bibitem{osworld} T.~Xie et al. OSWorld: Benchmarking multimodal agents for open-ended tasks in real computer environments. arXiv:2404.07972, 2024.
 \bibitem{webarena} S.~Zhou et al. WebArena: A realistic web environment for building autonomous agents. arXiv:2307.13854, 2023.
