@@ -1,0 +1,6 @@
+tmp/
+node_modules/
+*.log
+results/raw/**/downloads/
+results/raw*/**/downloads/
+results/raw*/**/work/

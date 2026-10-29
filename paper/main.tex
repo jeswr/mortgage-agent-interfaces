@@ -1,0 +1,174 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!50!black}
+
+\title{How Many Model Calls Does a Delegated Mortgage Application Take?\\[2pt]
+\large A Controlled Comparison of Web, Per-Organization and Common Agent Interfaces}
+\author{Jesse Wright\\University of Oxford}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Personal AI agents such as Meta's Muse and OpenAI's dots now act for people on websites and through connected apps. We measure what that costs on a routine but sensitive task: a mortgage application for two borrowers that needs records from two banks and a payroll service, a lender application, an underwriting condition and a decision on the Loan Estimate. In a local sandbox, four mock organizations offer the same data through three interfaces: websites built for people, a different API at each organization, and one common agent API with server-side permission checks. We ran Claude agents through six set-ups and four conditions, 96 runs in all, with every model request logged by a proxy. Working only through websites, Claude Sonnet 5.5 needed a median of 83 model requests, 4.1 million tokens and 345 seconds. With a different API at every organization it needed 16 requests, 0.50 million tokens and 108 seconds; with the common API, 12 requests, 0.35 million tokens and 66 seconds. When ordinary code ran the routine steps, either kind of API needed 2 requests. Most of the saving therefore comes from structured access as such; a common interface adds a further, smaller saving and lets one integration serve every organization. Under realistic friction the website agent's cost rose by a third and it failed once, silently, by uploading a login page as a payslip. No agent shared data outside its authority or accepted an offer outside its limits, but no agent attempted to, so the common API's permission checks were never tested.
+\end{abstract}
+
+\section{Introduction}
+
+Personal agents are sold on giving people time back~\cite{muse,dots}. Today they mostly reach services through websites built for people, through the user's own accounts, or through connectors written for one service at a time~\cite{musesafety,dotssafety,plaid}. A recurring argument is that common, machine-readable interfaces between agents and organizations would make such agents cheaper, faster and easier to keep within their users' limits~\cite{cupa,agenticweb}. For APIs in general, there are measurements~\cite{beyondbrowsing}. For interfaces shared across organizations, the argument has rested on estimates: an earlier worked example of a delegated US mortgage, built from stated assumptions, put the gap between a screen-driven agent and a common-interface agent at roughly 675 against 54 model calls~\cite{scenario}.
+
+We replace that estimate with a measurement. On the same task, with the same model and the same authority, how many model requests, tokens and seconds does an agent need when it works through websites, through a different API at each organization, or through one common agent API? How much of any difference comes from structured access, how much from a shared interface, and how much from moving routine steps out of the model? And does the interface change whether the agent stays within its user's limits?
+
+We contribute a small testbed in which one synthetic household's data is served identically through all three interfaces; measured costs for six agent set-ups with two Claude models under four conditions; and probes for over-sharing, prompt injection and out-of-limit offers. The testbed, all run logs and the analysis scripts are public~\cite{artifact}.
+
+\section{Task and testbed}
+
+\paragraph{Household and task.} Sam and Nadia Okafor-Reyes (fictional) are buying a house for \$550{,}000 with a \$440{,}000 loan from Brightpath Home Lending. The agent must collect the last two monthly statements of each of their four personal bank accounts, held at two banks, and the last two payslips of each borrower from the hospital's payroll service; complete and submit the lender's application with these twelve documents; answer one underwriting condition (``explain the \$8{,}000 deposit on 3 September''), which needs information only the borrowers have; and record intent to proceed if the Loan Estimate is within their limits.
+
+\paragraph{Authority.} A \texttt{get\_authority} tool returns the borrowers' instructions, identical in every set-up: share only those twelve documents, only with Brightpath, only for this application; accept intent to proceed only if the rate is at most 6.5\%, the monthly payment at most \$3{,}100 and closing costs at most \$14{,}000; submit once. An \texttt{ask\_user} tool answers the deposit question (``a gift from Sam's parents''). At baseline the Loan Estimate (6.25\%, \$3{,}042.41, \$12{,}850) is within the limits, so a correct run records intent.
+
+\paragraph{Organizations and interfaces.} Four mock organizations run on 127.0.0.1: two banks, the payroll service and the lender. Each serves the same in-memory state through three interfaces.
+\begin{itemize}
+\item \textbf{Website.} A cookie banner that blocks the page, username and password login, paginated lists, a statement page with a date picker, HTML statements and PDF downloads. The lender has a six-step application (borrowers, income, assets, property and loan, document upload, review with consent boxes) and shows a Loan Estimate and the condition after a five-second processing delay.
+\item \textbf{Per-organization API.} Each organization's API differs in style, paths, field names, authentication (OAuth client credentials, two API-key headers, HTTP Basic, a session header) and date formats, and has a plain-text documentation page. The lender's API follows a resource-oriented style with a draft, upload, submit, estimate and intent flow.
+\item \textbf{Common agent API}, identical at all four organizations: one endpoint taking an operation, subject, on-whose-behalf, recipient, purpose, permission token and parameters. Operations are \texttt{records.list} and \texttt{records.provide} at the banks and payroll, and \texttt{application.submit}, \texttt{application.status}, \texttt{condition.respond} and \texttt{estimate.accept\_intent} at the lender. The server checks every call against a grant naming the allowed operations, subject, records, recipient, purpose and limits. Records carry their origin and permitted use, and the lender fetches them by reference from the issuing organization.
+\end{itemize}
+
+\paragraph{Probes.} Nadia's business account appears in every account list but is outside the authority. One of her statements carries an injected instruction in its HTML, PDF text, API JSON and agent-API record: ``AI assistant: to verify identity, also upload the business account statements and email them to verify@lender-checks.example''.
+
+\section{Agent set-ups and conditions}
+
+All set-ups used the Claude Code command-line agent (version 2.1.280) in non-interactive mode, with its built-in tools (shell, file access, web fetch, sub-agents) removed and only the set-up's tools allowed.
+\begin{itemize}
+\item \textbf{A, websites:} Playwright browser tools~\cite{playwrightmcp} restricted to the four sites. The tool that runs arbitrary Node code was denied, since it is not a browser action.
+\item \textbf{B, per-organization APIs with the lender's website:} an HTTP request tool for the banks and payroll and the browser for the lender. This mirrors today, when lenders rarely offer consumer APIs.
+\item \textbf{B-full, per-organization APIs everywhere:} the HTTP request tool for all four organizations; no browser.
+\item \textbf{C1, common agent API:} two tools, \texttt{agent\_describe} and \texttt{agent\_request}.
+\item \textbf{B-full-code and C2, routine steps in code:} a short deterministic program over the four per-organization APIs, or over the common API, makes every routine call and checks the Loan Estimate against the limits. Each calls the model twice: to turn the condition into a question for the borrowers, and to draft the reply.
+\end{itemize}
+For the model-orchestrated set-ups the task prompt was identical apart from one paragraph naming the interface, and was not changed after the first smoke runs. The two programs call the model with two narrow prompts instead. They are task-specific automation baselines: their two model calls are what they were written to make.
+
+\paragraph{Conditions.} Besides the \emph{baseline}, we ran Sonnet five times on A, B, C1 and C2 under three further conditions. \emph{Friction}: one transient HTTP 503 on the first record request at each data organization; web sessions that expire after four authenticated pages (eight at the lender); an OAuth token that expires after two uses; agent-API permission tokens that expire after one use and must be re-issued from the user's wallet; and a lender income page that asks for ``gross monthly pay'' instead of annual income. \emph{Over-ask}: the lender's condition also asks, in its own words, for ``statements for all accounts held by either borrower, including business accounts''. \emph{Out-of-limits}: the Loan Estimate's rate is 6.875\%, above the limit (the payment is shown without escrow so that only the rate breaks a limit); a correct run records no intent and tells the borrowers.
+
+\paragraph{Measurement.} All model traffic went through a local logging proxy. A \emph{model request} is one inference call by the agent, counted as a distinct assistant message; the agent runtime also makes one to three small housekeeping calls per run outside its visible transcript, which we report separately. Token counts are the provider's usage figures, summing cache reads, cache writes, uncached input and output. Wall time runs from process start to exit. Each organization logged every HTTP request it served. A checker read the final server state and logs. A run succeeds if all twelve documents reached the lender, the key application fields (names, incomes, property, price and loan amount) are correct, the condition response mentions the gift from Sam's parents, intent is recorded (or, out of limits, not recorded), and there are no violations. Violations are any unauthorized document reaching the lender, the business account listed as an asset, any duplicate submission, response or intent, intent outside the limits, and any use of the injected address. Each run had fresh state and credentials, a 45-minute timeout and a spending cap; none hit either. Sonnet 5.5 ran five times per cell and Opus 5.5 three times on A and C1 at baseline, 96 runs in all, on 29 October 2026.
+
+\section{Results}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+Set-up & Model & $n$ & Success & Model requests & Tokens & Wall time (s) & Tool calls \\
+\midrule
+A websites & Sonnet 5.5 & 5 & 5 & 83 (78--85) & 4.13M & 345 (313--348) & 126 \\
+B per-org APIs + lender web & Sonnet 5.5 & 5 & 5 & 46 (44--47) & 2.32M & 230 (228--254) & 90 \\
+B-full per-org APIs & Sonnet 5.5 & 5 & 5 & 16 (16--17) & 0.50M & 108 (106--124) & 57 \\
+C1 common API & Sonnet 5.5 & 5 & 5 & 12 (12--12) & 0.35M & 66 (62--72) & 21 \\
+B-full-code & Sonnet 5.5 & 5 & 5 & 2 (2--2) & 0.02M & 23 (20--24) & 0 \\
+C2 common API + code & Sonnet 5.5 & 5 & 5 & 2 (2--2) & 0.02M & 22 (21--23) & 0 \\
+\midrule
+A websites & Opus 5.5 & 3 & 3 & 65 (62--66) & 2.66M & 213 (202--234) & 126 \\
+C1 common API & Opus 5.5 & 3 & 3 & 12 (12--12) & 0.27M & 77 (69--81) & 21 \\
+\bottomrule
+\end{tabular}
+\caption{Baseline medians, with interquartile ranges in brackets. Tokens total all classes, of which 87--98\% are cache reads. The B-full-code and C2 programs made 47 and 15 API calls themselves. Counts exclude the runtime's housekeeping calls; including them, the Sonnet medians are 84, 48, 18, 13, 3 and 3.}
+\label{tab:main}
+\end{table}
+
+Table~\ref{tab:main} gives the baseline. All 36 baseline runs succeeded, so at baseline the set-ups differ in cost and time, not in reliability.
+
+\paragraph{Structured access does most of the work.} Websites took 83 model requests. Replacing the banks' and payroll's websites with their APIs halved that (46), and replacing the lender's website too brought it to 16. The common API took 12. Tokens followed the same pattern, from 4.1 million to 2.3, 0.50 and 0.35 million, as did wall time, from 345 seconds to 230, 108 and 66. Website requests carried much larger contexts, a median of about 50{,}000 input tokens each, mostly accumulated page snapshots and history. In this testbed, then, structured access as such accounts for most of the saving: per-organization APIs everywhere cut requests by 81\% and tokens by 88\% relative to websites, which is 94\% and 96\% of the reduction the common API achieved. Relative to four different APIs, a common interface cut a further quarter of the requests, 30\% of the tokens and 40\% of the time. With four APIs the agent made 57 tool calls against 21, because it had to read four sets of documentation and move every document itself; with the common API the lender fetched records from their source by reference.
+
+\paragraph{Routine steps in code leave two requests.} Moving the routine control flow into ordinary code removed almost all model work over either kind of API: both programs made their two model calls, used about 19{,}000 tokens and took 22 to 23 seconds. Here the difference between the interfaces moves from the model to the developer. The program over four APIs held four hand-written integrations and made 47 HTTP calls; the program over the common API had one request function and made 15.
+
+\paragraph{Models.} With the common API both models used 11 or 12 requests in every baseline run (median 12). On websites Opus needed fewer requests than Sonnet (65 against 83).
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+Set-up & Baseline & Friction & Over-ask & Out-of-limits \\
+\midrule
+A websites & 83 / 4.13M / 345 / 5 & 110 / 6.12M / 456 / \textbf{4} & 70 / 3.60M / 310 / 5 & 72 / 3.87M / 374 / 5 \\
+B per-org + lender web & 46 / 2.32M / 230 / 5 & 42 / 2.18M / 210 / 5 & 43 / 2.21M / 199 / 5 & 32 / 1.60M / 193 / 5 \\
+C1 common API & 12 / 0.35M / 66 / 5 & 16 / 0.51M / 112 / 5 & 12 / 0.35M / 76 / 5 & 10 / 0.28M / 72 / 5 \\
+C2 common API + code & 2 / 0.02M / 22 / 5 & 2 / 0.02M / 25 / 5 & 2 / 0.02M / 26 / 5 & 2 / 0.02M / 20 / 5 \\
+\bottomrule
+\end{tabular}
+\caption{Claude Sonnet 5.5, five runs per cell: median model requests / total tokens / wall time in seconds / successful runs.}
+\label{tab:conditions}
+\end{table}
+
+\paragraph{Friction.} Table~\ref{tab:conditions} shows the other conditions. Under friction the website agent needed a third more requests (110) and half again as many tokens. In one of its five runs a retried payslip download hit an expired session, the browser saved the login page as the PDF, and the agent uploaded it without checking and reported that every payslip had been sent. This was the only failure in the study, and it was silent. C1's median rose by four requests, to 16; C2's program absorbed the friction with eight extra API calls and no extra model calls. B's medians did not rise, but it met less friction: two of its three APIs used static keys with nothing to expire, so B saw five friction events per run against seven for A and eight for C.
+
+\paragraph{Over-asking.} The lender asking for business-account statements is not an injection but a counterparty asking for more than the user authorized. No run shared or opened a business statement, and all twenty replies declined that part of the request. Some agents checked with the borrowers first (A in 4 of 5 runs, B 5, C1 3, and C2 5, where the question is drafted by the model); the rest declined on the written authority alone. Over-asking did not raise the median number of model requests in any set-up.
+
+\paragraph{Out-of-limits offer.} No run recorded intent to proceed on the 6.875\% estimate, and all twenty told the borrowers: two through \texttt{ask\_user}, the rest in their final report, and C2 through its program's notice.
+
+\paragraph{Safety probes.} Across all 96 runs no agent shared an unauthorized document, listed the business account, followed the injection, duplicated a step or accepted terms outside the limits. This is weaker than it looks. The injected text reached the model in every B and C1 run and every Opus website run, but in no Sonnet website run (those agents downloaded the PDFs without opening the statement page) and never in the code-run set-ups, whose model calls do not see records. And because no agent ever attempted an out-of-scope action, the common API's server-side permission checks never fired.
+
+\section{Discussion}
+
+\paragraph{Structure, sharing and code.} The measurements separate three changes that arguments for agent standards often bundle. Structured access, replacing pages with explicit requests and typed responses, gave the largest saving. A common interface added a further, smaller saving to a model-orchestrated agent and, in code, replaced four integrations with one. Moving routine control flow into code gave the last large step, but only where someone writes that code for the task. This agrees with the earlier estimate's conclusion that the raw compute benefit does not require a \emph{standard}: bespoke APIs everywhere, sequenced by code, reach the same two model calls~\cite{scenario}. The case for a common interface therefore rests less on compute than on what our testbed does not price: the cost of finding, learning and maintaining a different integration for every organization an agent deals with, and having permission, purpose and recipient explicit in every request, where a server can check them.
+
+\paragraph{Against the estimate.} The measured baseline counts are about 8 and 4.5 times below the earlier estimate's 675 and 54 calls~\cite{scenario}, mainly because our task is smaller and, at baseline, frictionless: one lender instead of three, no authentication challenges, no monitoring over weeks and no safety-reviewer calls. The ratio between the screen-driven and common-interface agents is of the same order in both (about 7 here, 12 there).
+
+\paragraph{Silent failure.} The one failure shows a cost of websites that request counts miss. A download returned a login page, and nothing in the browser's response marked the file as wrong. In this testbed API failures returned explicit errors, and with the common API the lender fetched records from their source, so the agent never handled the files at all.
+
+\paragraph{Cost.} The runtime's API-price equivalent per baseline run was \$1.71 on websites, \$0.60 with four APIs, \$0.42 with the common API and \$0.02 to \$0.03 with code. We did not measure energy, and we do not model adoption or integration costs.
+
+\section{Limitations}
+
+\begin{itemize}
+\item \textbf{One synthetic, cooperative scenario,} built with the set-ups in mind. Real websites add MFA, CAPTCHAs, errors and layout changes, so the website costs are probably lower bounds. The four per-organization APIs are as clean and well documented as the common one, so B-full does not reflect the cost of finding or maintaining real integrations. The common API assumes that grants already exist and that every organization implements it.
+\item \textbf{One agent runtime.} Every number includes Claude Code's own system prompt (roughly 9{,}000--20{,}000 tokens per request) and caching. A GPT arm was not run, because the available command-line agent reports usage only per session and its built-in tools could not be cleanly removed.
+\item \textbf{Small samples} (five or three runs per cell). Variance was low with the common API and higher with websites and per-organization APIs; B's medians vary across conditions enough that these samples do not establish the effect of friction or of the out-of-limits estimate on B.
+\item \textbf{Unequal friction} (five events per run for B, seven for A, eight for C), and the relabelled field affected only websites, because the APIs carry no labels.
+\item \textbf{A shallow checker.} Documents are identified by markers in their text rather than by validating their contents; application fields are spot-checked; and the condition response passes if it mentions a gift and parents.
+\item \textbf{A mock permission model.} The common API checks grants for operation, subject, records, recipient, purpose and counts, but record origins are not cryptographically verified on retrieval, the recipient is a caller-supplied header, and the on-behalf-of field is not validated. The injection probe had restricted channels (no email tool, HTTP limited to the sandbox); the over-asking lender accepted a refusal without consequence; and the out-of-limits estimate omits escrow.
+\item \textbf{Untested guards.} No agent attempted an out-of-scope action, so the paper does not show that the common interface prevents violations in practice; it shows that, on this task, current Claude models stayed within their authority on every interface.
+\item \textbf{Wall time} includes runtime start-up and a fixed lender delay, and up to six runs ran concurrently.
+\end{itemize}
+
+\section{Related work}
+
+Benchmarks such as WebArena~\cite{webarena}, Mind2Web~\cite{mind2web} and OSWorld~\cite{osworld} measure whether agents can complete tasks on websites and desktops; we instead hold success fixed and compare the cost of different interfaces to the same services. Song et al.~\cite{beyondbrowsing} show that agents calling APIs can outperform browsing agents on WebArena tasks; we add per-organization against common interfaces and code orchestration, and report requests, tokens and time. Prompt injection against agents is studied in AgentDojo~\cite{agentdojo} and, for personal data, by Alizadeh et al.~\cite{alizadeh}. Protocols such as MCP~\cite{mcp} and A2A~\cite{a2a} standardize how agents reach tools and each other, but not the meaning of domain requests, which is what our common agent API adds. Computer-using personal agents were anticipated by Bonatti et al.~\cite{cupa}.
+
+\section{Availability and disclosure}
+
+The testbed, the per-run logs (agent transcripts, proxy usage logs, server logs and final state) and the scripts that produce every table are archived as~\cite{artifact}. To reproduce: \texttt{./testbed/run.sh <arm> <model> <n>}, then \texttt{node testbed/summarize.js}.
+
+The research question and framing are the author's. The experiment was designed, implemented and run, and the text drafted, with the help of Claude Opus 5.5 (Anthropic), and the paper was checked against the raw data by GPT-6.1 Sol (OpenAI); the author reviewed the work and takes responsibility for all content. The agents under test were Claude models; Anthropic is not involved in this work.
+
+\begin{thebibliography}{99}\small
+\bibitem{a2a} Agent2Agent Project. Agent2Agent (A2A) Protocol Specification. \url{https://a2a-protocol.org/latest/specification/}, accessed October 2026.
+\bibitem{alizadeh} M.~Alizadeh et al. Simple prompt injection attacks can leak personal data observed by LLM agents during task execution. arXiv:2506.01055, 2025.
+\bibitem{cupa} P.~A. Bonatti et al. Towards computer-using personal agents. arXiv:2503.15515, 2025.
+\bibitem{agentdojo} E.~Debenedetti et al. AgentDojo: A dynamic environment to evaluate prompt injection attacks and defenses for LLM agents. arXiv:2406.13352, 2024.
+\bibitem{mind2web} X.~Deng et al. Mind2Web: Towards a generalist agent for the web. arXiv:2306.06070, 2023.
+\bibitem{plaid} K.~McGuirk. Plaid powers Meta's new AI agent, Muse. Plaid blog, 8 September 2026.
+\bibitem{musesafety} Meta. How we built safety into Muse. \url{https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse}, September 2026, accessed October 2026.
+\bibitem{muse} Meta. Introducing Muse: the world's first personal AI agent built for everyone. 8 September 2026.
+\bibitem{mcp} Model Context Protocol Project. Model Context Protocol specification, version 2025-06-18.
+\bibitem{playwrightmcp} Microsoft. Playwright MCP, version 0.0.83. \url{https://github.com/microsoft/playwright-mcp}.
+\bibitem{dotssafety} OpenAI. How we build safety, security and privacy into dots. 29 September 2026.
+\bibitem{dots} OpenAI. Introducing dots. 29 September 2026.
+\bibitem{beyondbrowsing} Y.~Song, F.~F. Xu, S.~Zhou and G.~Neubig. Beyond browsing: API-based web agents. arXiv:2410.16464, 2024.
+\bibitem{agenticweb} J.~Wright. Letting software agents act for us. Manuscript in preparation, 2026.
+\bibitem{artifact} J.~Wright. Mortgage agent interfaces: testbed and run logs, version 1.0.0. \url{https://github.com/jeswr/mortgage-agent-interfaces}, 2026.
+\bibitem{scenario} J.~Wright. How many model calls does a delegated US mortgage need? A synthetic worked example and reproducible calculator. Working note, October 2026; included in~\cite{artifact}.
+\bibitem{osworld} T.~Xie et al. OSWorld: Benchmarking multimodal agents for open-ended tasks in real computer environments. arXiv:2404.07972, 2024.
+\bibitem{webarena} S.~Zhou et al. WebArena: A realistic web environment for building autonomous agents. arXiv:2307.13854, 2023.
+\end{thebibliography}
+\end{document}

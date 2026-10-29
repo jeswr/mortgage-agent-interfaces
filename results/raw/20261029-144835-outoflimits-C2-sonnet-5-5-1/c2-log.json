@@ -1,0 +1,79 @@
+{
+ "application_id": "BHL-26001",
+ "within_limits": false,
+ "final_message": "Application BHL-26001 submitted, but the Loan Estimate is outside your limits (rate 6.875% vs 6.5%, payment $2890.49 vs $3100, closing costs $12850 vs $14000); intent to proceed was NOT recorded.",
+ "code_calls": 14,
+ "llm_calls": 2,
+ "log": [
+  {
+   "org": "jfcu",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "jfcu",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "nsb",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "nsb",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.submit",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "condition.respond",
+   "status": 200
+  }
+ ]
+}

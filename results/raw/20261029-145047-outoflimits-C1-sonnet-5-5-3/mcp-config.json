@@ -1,0 +1,20 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-145047-outoflimits-C1-sonnet-5-5-3",
+    "cond=outoflimits"
+   ]
+  },
+  "agentapi": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-agentapi.js",
+    "./results/raw/20261029-145047-outoflimits-C1-sonnet-5-5-3",
+    "7160"
+   ]
+  }
+ }
+}

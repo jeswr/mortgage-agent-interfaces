@@ -1,0 +1,9 @@
+{
+  "title": "Mortgage agent interfaces: testbed and run logs",
+  "upload_type": "software",
+  "description": "Testbed, run logs and paper for a controlled comparison of the model requests, tokens and time a personal AI agent needs to complete a synthetic mortgage application through websites, per-organization APIs, or a common agent API, with model or code orchestration. 96 runs with Claude Sonnet 5.5 and Claude Opus 5.5 across four conditions.",
+  "creators": [{"name": "Wright, Jesse", "affiliation": "University of Oxford"}],
+  "license": "MIT",
+  "keywords": ["AI agents", "agent interfaces", "APIs", "personal agents", "measurement"],
+  "access_right": "open"
+}

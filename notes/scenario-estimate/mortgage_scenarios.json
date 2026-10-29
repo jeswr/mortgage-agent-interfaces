@@ -1,0 +1,543 @@
+{
+  "meta": {
+    "title": "Synthetic US conventional purchase mortgage: borrower-agent compute scenarios",
+    "status": "SYNTHETIC WORKED EXAMPLE. Every count, token size, cache fraction, latency, retry rate, human-time and calendar value in this file is an ASSUMPTION chosen for illustration. None is measured from a real mortgage, sampled from users, or calibrated to any benchmark or public trace.",
+    "evidence_cutoff": "2026-10-17",
+    "price_basis": "Provider Standard API list prices recorded in COMPUTE-PRICE-NOTES.md (checked 2026-10-17). Outputs are illustrative per-token bills, not subscription charges, not measured compute and not energy.",
+    "legal_basis": "Waiting periods follow MORTGAGE-AND-FAILURE-EVIDENCE.md (CFPB, 12 CFR 1026.19, IRS IVES). The fifteen fresh human checkpoints are a conservative study choice held fixed across architectures, not a list of statutory requirements. Durations not stated in the ledger are labelled assumptions.",
+    "retry_semantics": "Each failed action gets exactly one additional repair attempt (expected value rate x actions), and the repair is assumed to succeed. This is not geometric retry-until-success; abandoned or failed tasks are not costed.",
+    "schedule_semantics": "parallel_critical_path_s is a conditional scheduling estimate, not an optimal DAG critical path: stages run in order, a mixed B stage runs its connector group and then its browser group, and units within a group run up to parallel_width at a time. Background monitoring is excluded.",
+    "external_request_semantics": "N_external_service_requests counts application-level requests to or from other parties, including incoming event deliveries handled by C; subresource fetches are excluded."
+  },
+  "request_input_cap_tokens": 272000,
+  "scope": {
+    "loan": "conventional purchase, first lien, one property",
+    "co_borrowers": 2,
+    "employment": "both salaried, one employer each (W-2 income only)",
+    "employers": 2,
+    "deposit_institutions": 2,
+    "statement_months_per_institution": 2,
+    "lenders_receiving_application": 3,
+    "lenders_chosen": 1,
+    "underwriting_clarification_rounds": 1,
+    "conditions_in_round": 2,
+    "documents_uploaded_to_chosen_lender": 12,
+    "document_breakdown": "4 bank statements (2 institutions x 2 months), 2 recent pay stubs, 4 W-2s (2 borrowers x 2 years), 2 photo IDs",
+    "appointments_coordinated": 2,
+    "authenticated_service_sessions": 7,
+    "service_session_breakdown": "2 deposit institutions, 2 employer/payroll portals, 3 lender portals (the chosen lender's session is reused)",
+    "named_agent_mediated_checkpoints": 15,
+    "checkpoint_breakdown": {
+      "goal_and_scope_confirmation": 1,
+      "lender_specific_application_and_credit_check_permission": 3,
+      "lender_choice": 1,
+      "intent_to_proceed_bound_to_one_loan_estimate": 1,
+      "appraisal_or_application_fee_authorisation": 1,
+      "asset_verification_account_selection_per_institution": 2,
+      "irs_form_4506c_signature_per_borrower": 2,
+      "employment_income_verification_authorisation_per_borrower": 2,
+      "condition_response_attestation": 1,
+      "closing_disclosure_review_acknowledgement": 1
+    },
+    "human_only_acts_not_performed_by_agent": [
+      "closing signature on note and mortgage/deed of trust",
+      "cash-to-close funds transfer",
+      "payment of appraisal/application fee",
+      "property access for the physical appraisal"
+    ],
+    "excluded_from_agent_processing": [
+      "lender processing and underwriting time",
+      "Loan Estimate delivery wait (lender generally must deliver within 3 business days of application)",
+      "Closing Disclosure waiting period (at least 3 business days before consummation; certain changes restart it)",
+      "physical appraisal, title and insurance work",
+      "lender-side verification vendors (asset, income, employment, IRS IVES) operated under the lender's contracts",
+      "human signature, payment and funds transfer",
+      "time humans spend waiting between checkpoints"
+    ]
+  },
+  "prices_usd_per_million_tokens": {
+    "gpt_6_astra_standard": {
+      "label": "GPT-6 Astra, Standard",
+      "input": 10.0,
+      "cache_read": 1.0,
+      "cache_write": 12.5,
+      "output": 50.0,
+      "note": "Requests above 272K input are priced higher; the calculator fails a check if any assumed request reaches that size.",
+      "source": "https://developers.openai.com/api/docs/models/gpt-6-astra"
+    },
+    "claude_opus_5_5_standard": {
+      "label": "Claude Opus 5.5, Standard global, 5-minute cache write",
+      "input": 4.0,
+      "cache_read": 0.2,
+      "cache_write": 5.0,
+      "output": 20.0,
+      "note": "1-hour cache write is 8 USD/M and is not used here. Output includes billable thinking.",
+      "source": "https://platform.claude.com/docs/en/models/opus-5-5/overview"
+    }
+  },
+  "architectures": {
+    "A_step": "Screen-driven agent, one UI action per model response, screenshot observation after each action. Shown as a lower bound on engineering effort, not the fair comparator.",
+    "A_batch": "Screen-driven agent that emits a batch of up to b UI actions per response (direct URL navigation, keyboard entry, multi-field fill) and observes once per batch. The fair screen-driven comparator.",
+    "B": "Existing direct APIs/connectors (financial-data aggregator, email, calendar, search/fetch, local PDF fill, product-native approval UI) orchestrated by the model; stages without a connector fall back to the A_batch browser path. Routine connector polling may run without the model.",
+    "C": "Interoperable domain operations with explicit, machine-checked permission objects executed by ordinary software. The LLM is called only for natural-language goals, comparison narrative, supplier discovery judgement, exception handling, borrower questions and (if disclosures are not machine-readable) document reading."
+  },
+  "c_residual_counting_rules": {
+    "goal_clarification": "counted: LLM requests in every architecture",
+    "supplier_discovery": "counted: 1 LLM request per lender to judge entity role and ambiguous registry results",
+    "ocr_or_document_reading": "counted only when c_structured_disclosures is false (Loan Estimate and Closing Disclosure read by the model)",
+    "exception_handling": "counted: 2 LLM requests per exception; exceptions occur at the same rate in every architecture",
+    "model_based_monitors": "not used in C; status changes arrive as events. Each assumed status update costs one external delivery and one deterministic handling operation (0 LLM). Any model reviewer is counted under reviewer_mode for all architectures alike",
+    "human_clarification": "counted as human minutes and as borrower-question model requests in every architecture",
+    "permission_checks": "counted as tool invocations (deterministic), not model requests"
+  },
+  "stages": [
+    {
+      "id": "goal",
+      "label": "Goal clarification with both borrowers",
+      "multiplicity": 1,
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 0, "pages": 0, "plan": 4},
+      "B": {"api_units": "all", "calls": 0, "ext": 0, "plan": 4},
+      "C": {"ops": 1, "ext": 0, "llm": 4, "env": 0},
+      "note": "Four conversational turns in every architecture; C stores the resulting goal/mandate draft deterministically.",
+      "basis": "assumption"
+    },
+    {
+      "id": "auth",
+      "label": "Authentication / mandate establishment per service session",
+      "multiplicity": 7,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "variants": {
+        "cold": {
+          "A": {"ui": 8, "pages": 3, "plan": 1},
+          "B": {"api_units": "all", "calls": 2, "ext": 2, "plan": 1},
+          "C": {"ops": 3, "ext": 3, "llm": 0, "env": 0},
+          "human_interventions_per_unit": 1
+        },
+        "warm": {
+          "A": {"ui": 1, "pages": 1, "plan": 0},
+          "B": {"api_units": "all", "calls": 1, "ext": 1, "plan": 0},
+          "C": {"ops": 1, "ext": 1, "llm": 0, "env": 0},
+          "human_interventions_per_unit": 0
+        }
+      },
+      "note": "Cold: secure sign-in hand-off/MFA (A), OAuth grant (B), endpoint discovery + credential verification + mandate grant (C); each needs one human intervention. Warm: session or mandate validity check only.",
+      "basis": "assumption"
+    },
+    {
+      "id": "retrieve_bank",
+      "label": "Authorised retrieval: two months of statements per deposit institution",
+      "multiplicity": 2,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 10, "pages": 5, "plan": 1},
+      "B": {"api_units": "all", "calls": 3, "ext": 3, "plan": 1},
+      "C": {"ops": 4, "ext": 3, "llm": 0, "env": 0},
+      "note": "C: permission check, two record retrievals, local receipt/hash. Connector coverage for B is a scenario parameter; no claim that all banks offer structured access.",
+      "basis": "assumption"
+    },
+    {
+      "id": "retrieve_income",
+      "label": "Authorised retrieval: pay stub and W-2s per employer/payroll portal",
+      "multiplicity": 2,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 10, "pages": 5, "plan": 1},
+      "B": {"api_units": "all", "calls": 3, "ext": 3, "plan": 1},
+      "C": {"ops": 4, "ext": 3, "llm": 0, "env": 0},
+      "note": "Consumer-side payroll connector availability is uncertain; central B uses the browser fallback.",
+      "basis": "assumption"
+    },
+    {
+      "id": "lender_discovery",
+      "label": "Supplier discovery and lender entity/role verification",
+      "multiplicity": 3,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 6000, "C": 1000},
+      "A": {"ui": 12, "pages": 6, "plan": 2},
+      "B": {"api_units": "all", "calls": 4, "ext": 4, "plan": 2},
+      "C": {"ops": 2, "ext": 2, "llm": 1, "env": 1},
+      "note": "Distinguish lender, broker, comparison tool and lead generator before any data is sent. A reads pages via screenshots counted inside per-request input; B reads fetched page text as document tokens.",
+      "basis": "assumption"
+    },
+    {
+      "id": "le_application",
+      "label": "Data preparation and entry of the six application items, per lender",
+      "multiplicity": 3,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 1,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 30, "pages": 6, "plan": 2},
+      "B": {"api_units": 0, "calls": 3, "ext": 3, "plan": 2},
+      "C": {"ops": 4, "ext": 3, "llm": 0, "env": 0},
+      "note": "No consumer application API is assumed in B (browser fallback); the B api spec is used only in the hypothetical all-API sensitivity. Submission is a consequential write after the lender-specific checkpoint.",
+      "basis": "assumption"
+    },
+    {
+      "id": "le_gather",
+      "label": "Official offer gathering: obtain and extract each Loan Estimate",
+      "multiplicity": 3,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 4500, "B": 4500, "C": 0},
+      "A": {"ui": 6, "pages": 3, "plan": 2},
+      "B": {"api_units": "all", "calls": 2, "ext": 2, "plan": 2},
+      "C": {"ops": 2, "ext": 1, "llm": 0, "env": 0},
+      "C_unstructured": {"llm": 1, "env": 1, "doc": 4500},
+      "note": "Three-page Loan Estimate assumed at 1,500 tokens per page when read by a model. C assumes a machine-readable estimate unless c_structured_disclosures is false.",
+      "basis": "assumption"
+    },
+    {
+      "id": "compare",
+      "label": "Offer comparison and explanation to borrowers",
+      "multiplicity": 1,
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 0, "pages": 0, "plan": 3},
+      "B": {"api_units": "all", "calls": 0, "ext": 0, "plan": 3},
+      "C": {"ops": 1, "ext": 0, "llm": 2, "env": 1},
+      "note": "C computes the normalised comparison deterministically and uses the LLM for the narrative and follow-up.",
+      "basis": "assumption"
+    },
+    {
+      "id": "checkpoints",
+      "label": "Named consent checkpoints: present and record each decision",
+      "multiplicity": 15,
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "human_checkpoints_per_unit": 1,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 0, "pages": 0, "plan": 1},
+      "B": {"api_units": "all", "calls": 1, "ext": 0, "plan": 0},
+      "C": {"ops": 2, "ext": 0, "llm": 0, "env": 0},
+      "note": "C renders a templated permission object (verb, object, purpose, duration, recipient) and records the decision. Borrower questions at checkpoints are counted in the questions stage.",
+      "basis": "assumption"
+    },
+    {
+      "id": "intent",
+      "label": "Send intent to proceed to the chosen lender",
+      "multiplicity": 1,
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 1,
+      "outbound_human_messages_per_unit": 1,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 6, "pages": 2, "plan": 1},
+      "B": {"api_units": "all", "calls": 1, "ext": 1, "plan": 1},
+      "C": {"ops": 3, "ext": 2, "llm": 0, "env": 0},
+      "note": "Bound to one lender and one Loan Estimate version; B sends by email where the lender accepts it.",
+      "basis": "assumption"
+    },
+    {
+      "id": "consent_prep",
+      "label": "Prepare verification consents (2 asset-portal links, 2 IRS 4506-C, 2 employment/income)",
+      "multiplicity": 6,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 1,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 12, "pages": 3, "plan": 1},
+      "B": {"api_units": "all", "calls": 2, "ext": 1, "plan": 1},
+      "C": {"ops": 3, "ext": 2, "llm": 0, "env": 0},
+      "note": "Agent prepares and transmits; humans select accounts in the vendor portal and sign. B: local PDF fill for 4506-C where available, browser otherwise.",
+      "basis": "assumption"
+    },
+    {
+      "id": "doc_transfer",
+      "label": "Document transfer to the chosen lender, per document",
+      "multiplicity": 12,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 1,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 5, "pages": 2, "plan": 0},
+      "B": {"api_units": 0, "calls": 2, "ext": 2, "plan": 0},
+      "C": {"ops": 3, "ext": 2, "llm": 0, "env": 0},
+      "note": "Upload, document-type selection, confirm, verify. C: permission check, transfer, receipt verification.",
+      "basis": "assumption"
+    },
+    {
+      "id": "appointments",
+      "label": "Appointment coordination (appraisal access, closing)",
+      "multiplicity": 2,
+      "parallel": true,
+      "on_critical_path": true,
+      "consequential_per_unit": 2,
+      "outbound_human_messages_per_unit": 2,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 10, "pages": 4, "plan": 2},
+      "B": {"api_units": "all", "calls": 3, "ext": 3, "plan": 2},
+      "C": {"ops": 3, "ext": 3, "llm": 1, "env": 1},
+      "note": "Counterparts may reply in natural language, so C keeps one LLM request per appointment.",
+      "basis": "assumption"
+    },
+    {
+      "id": "monitoring",
+      "label": "Status monitoring during processing (per check)",
+      "multiplicity": "monitoring_polls",
+      "parallel": false,
+      "on_critical_path": false,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 4, "pages": 2, "plan": 1},
+      "B": {"api_units": "all", "calls": 1, "ext": 1, "plan": 0, "model_free": true},
+      "C": {"ops": 1, "ext": 1, "llm": 0, "env": 0},
+      "note": "Spread over the processing weeks, so excluded from the schedule estimate. B polls a connector deterministically and wakes the model only for new messages (already counted elsewhere). C receives events: ASSUMPTION that the number of status updates delivered equals monitoring_polls (10/20/40); each is one external delivery plus deterministic handling, 0 LLM. Real update frequencies may differ.",
+      "basis": "assumption"
+    },
+    {
+      "id": "clarification",
+      "label": "Underwriting clarification round (two conditions)",
+      "multiplicity": 1,
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 2,
+      "outbound_human_messages_per_unit": 2,
+      "doc_tokens": {"A": 6000, "B": 6000, "C": 3000},
+      "A": {"ui": 16, "pages": 6, "plan": 4},
+      "B": {"api_units": 0, "calls": 5, "ext": 4, "plan": 4},
+      "C": {"ops": 6, "ext": 4, "llm": 3, "env": 2},
+      "note": "Interpret notice, locate sourced records, draft explanation for borrower attestation, submit two responses. Residual LLM work remains in C.",
+      "basis": "assumption"
+    },
+    {
+      "id": "final_review",
+      "label": "Final review: Closing Disclosure against chosen Loan Estimate",
+      "multiplicity": 1,
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 7500, "B": 7500, "C": 1500},
+      "A": {"ui": 6, "pages": 3, "plan": 3},
+      "B": {"api_units": "all", "calls": 2, "ext": 2, "plan": 3},
+      "C": {"ops": 2, "ext": 1, "llm": 1, "env": 1},
+      "C_unstructured": {"llm": 1, "env": 1, "doc": 7500},
+      "note": "Five-page disclosure at 1,500 tokens per page when model-read. C diffs structured fields and explains differences.",
+      "basis": "assumption"
+    },
+    {
+      "id": "questions",
+      "label": "Borrower questions (per question)",
+      "multiplicity": "borrower_questions",
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 0, "pages": 0, "plan": 1},
+      "B": {"api_units": "all", "calls": 0, "ext": 0, "plan": 1},
+      "C": {"ops": 0, "ext": 0, "llm": 1, "env": 0},
+      "note": "Same count in every architecture.",
+      "basis": "assumption"
+    },
+    {
+      "id": "exceptions",
+      "label": "Exceptions (portal error, nonstandard form, ambiguous request), per exception",
+      "multiplicity": "exceptions",
+      "parallel": false,
+      "on_critical_path": true,
+      "consequential_per_unit": 0,
+      "doc_tokens": {"A": 0, "B": 0, "C": 0},
+      "A": {"ui": 6, "pages": 2, "plan": 3},
+      "B": {"api_units": "all", "calls": 2, "ext": 2, "plan": 3},
+      "C": {"ops": 2, "ext": 2, "llm": 2, "env": 2},
+      "note": "Exceptions are a property of the world, so the same count applies to every architecture.",
+      "basis": "assumption"
+    }
+  ],
+  "scenarios": {
+    "lean": {
+      "description": "Cooperative services, warm sessions/mandates, good connector coverage, little friction.",
+      "batch_actions_per_request": 6,
+      "b_tool_calls_per_request": 4,
+      "parallel_width": 4,
+      "retry_rate_ui": 0.02,
+      "retry_rate_api": 0.01,
+      "auth_mode": "warm",
+      "counts": {"monitoring_polls": 10, "borrower_questions": 2, "exceptions": 1},
+      "b_api_units": {"auth": 4, "retrieve_bank": 2, "retrieve_income": 2, "consent_prep": 4, "final_review": 1},
+      "c_structured_disclosures": true,
+      "reviewer_mode": "per_consequential_action",
+      "output_multiplier": 1.0,
+      "tokens": {
+        "A_step": {"input": 15000, "output": 250},
+        "A_batch": {"input": 15000, "output": 450},
+        "B": {"input": 10000, "output": 250},
+        "C": {"input": 6000, "output": 400},
+        "reviewer": {"A": {"input": 6000, "output": 200}, "B": {"input": 4000, "output": 200}, "C": {"input": 3000, "output": 200}}
+      },
+      "cache": {"A": {"read": 0.85, "write": 0.05}, "B": {"read": 0.8, "write": 0.05}, "C": {"read": 0.5, "write": 0.15}},
+      "latency": {"ttft_s": 1.0, "decode_tokens_per_s": 80, "browser_action_s": 0.8, "api_call_s": 0.2, "local_op_s": 0.02},
+      "human": {"minutes_per_checkpoint": 2, "goal_conversation_min": 15, "clarification_round_min": 10, "auth_intervention_min": 1.5, "minutes_per_question": 2, "minutes_per_exception": 5},
+      "calendar_business_days": [
+        {"component": "pre-application shopping and document gathering", "business_days": 1, "basis": "assumption"},
+        {"component": "Loan Estimate delivery after application", "business_days": 1, "basis": "assumption within the legal bound (lender generally must deliver within 3 business days)"},
+        {"component": "comparison, decision and intent to proceed", "business_days": 1, "basis": "assumption"},
+        {"component": "processing, appraisal, underwriting and conditions", "business_days": 12, "basis": "assumption; no verified source supplied for typical duration"},
+        {"component": "Closing Disclosure waiting period", "business_days": 3, "basis": "legal minimum: at least 3 business days before consummation"},
+        {"component": "closing appointment", "business_days": 1, "basis": "assumption"}
+      ]
+    },
+    "central": {
+      "description": "Illustrative and invented: cold authentication, partial connector coverage, moderate retries and exceptions.",
+      "batch_actions_per_request": 4,
+      "b_tool_calls_per_request": 2,
+      "parallel_width": 3,
+      "retry_rate_ui": 0.05,
+      "retry_rate_api": 0.02,
+      "auth_mode": "cold",
+      "counts": {"monitoring_polls": 20, "borrower_questions": 5, "exceptions": 3},
+      "b_api_units": {"auth": 2, "retrieve_bank": 2, "retrieve_income": 0, "consent_prep": 2, "final_review": 1},
+      "c_structured_disclosures": true,
+      "reviewer_mode": "per_consequential_action",
+      "output_multiplier": 1.0,
+      "tokens": {
+        "A_step": {"input": 25000, "output": 500},
+        "A_batch": {"input": 25000, "output": 900},
+        "B": {"input": 15000, "output": 500},
+        "C": {"input": 10000, "output": 800},
+        "reviewer": {"A": {"input": 6000, "output": 200}, "B": {"input": 4000, "output": 200}, "C": {"input": 3000, "output": 200}}
+      },
+      "cache": {"A": {"read": 0.7, "write": 0.1}, "B": {"read": 0.6, "write": 0.1}, "C": {"read": 0.3, "write": 0.2}},
+      "latency": {"ttft_s": 2.0, "decode_tokens_per_s": 50, "browser_action_s": 1.5, "api_call_s": 0.5, "local_op_s": 0.02},
+      "human": {"minutes_per_checkpoint": 4, "goal_conversation_min": 25, "clarification_round_min": 20, "auth_intervention_min": 1.5, "minutes_per_question": 2, "minutes_per_exception": 5},
+      "calendar_business_days": [
+        {"component": "pre-application shopping and document gathering", "business_days": 3, "basis": "assumption"},
+        {"component": "Loan Estimate delivery after application", "business_days": 3, "basis": "legal bound: lender generally must deliver within 3 business days"},
+        {"component": "comparison, decision and intent to proceed", "business_days": 2, "basis": "assumption"},
+        {"component": "processing, appraisal, underwriting and conditions", "business_days": 20, "basis": "assumption; no verified source supplied for typical duration"},
+        {"component": "Closing Disclosure waiting period", "business_days": 3, "basis": "legal minimum: at least 3 business days before consummation"},
+        {"component": "closing appointment", "business_days": 1, "basis": "assumption"}
+      ]
+    },
+    "friction": {
+      "description": "Friction-heavy: cold authentication, poor connector coverage, PDF-only disclosures, frequent retries and exceptions, long reasoning outputs.",
+      "batch_actions_per_request": 2,
+      "b_tool_calls_per_request": 1,
+      "parallel_width": 2,
+      "retry_rate_ui": 0.15,
+      "retry_rate_api": 0.05,
+      "auth_mode": "cold",
+      "counts": {"monitoring_polls": 40, "borrower_questions": 12, "exceptions": 8},
+      "b_api_units": {"auth": 1, "retrieve_bank": 1, "retrieve_income": 0, "consent_prep": 2, "final_review": 0},
+      "c_structured_disclosures": false,
+      "reviewer_mode": "per_consequential_action",
+      "output_multiplier": 1.0,
+      "tokens": {
+        "A_step": {"input": 40000, "output": 1200},
+        "A_batch": {"input": 40000, "output": 2000},
+        "B": {"input": 25000, "output": 1200},
+        "C": {"input": 16000, "output": 1600},
+        "reviewer": {"A": {"input": 6000, "output": 200}, "B": {"input": 4000, "output": 200}, "C": {"input": 3000, "output": 200}}
+      },
+      "cache": {"A": {"read": 0.4, "write": 0.2}, "B": {"read": 0.35, "write": 0.2}, "C": {"read": 0.1, "write": 0.3}},
+      "latency": {"ttft_s": 4.0, "decode_tokens_per_s": 30, "browser_action_s": 3.0, "api_call_s": 1.5, "local_op_s": 0.05},
+      "human": {"minutes_per_checkpoint": 8, "goal_conversation_min": 45, "clarification_round_min": 45, "auth_intervention_min": 1.5, "minutes_per_question": 2, "minutes_per_exception": 5},
+      "calendar_business_days": [
+        {"component": "pre-application shopping and document gathering", "business_days": 5, "basis": "assumption"},
+        {"component": "Loan Estimate delivery after application", "business_days": 3, "basis": "legal bound: lender generally must deliver within 3 business days"},
+        {"component": "comparison, decision and intent to proceed", "business_days": 5, "basis": "assumption"},
+        {"component": "processing, appraisal, underwriting and conditions", "business_days": 35, "basis": "assumption; no verified source supplied for typical duration"},
+        {"component": "Closing Disclosure waiting period including one restart", "business_days": 6, "basis": "legal minimum 3 business days, restarted once by an assumed qualifying change"},
+        {"component": "closing appointment", "business_days": 1, "basis": "assumption"}
+      ]
+    }
+  },
+  "sensitivities": [
+    {"name": "retries_zero", "base": "central", "description": "No retries (used for the pre-retry hand count)", "overrides": {"retry_rate_ui": 0.0, "retry_rate_api": 0.0}},
+    {"name": "reviewer_none", "base": "central", "description": "No model-based safety reviewer in any architecture", "overrides": {"reviewer_mode": "none"}},
+    {"name": "reviewer_per_model_request", "base": "central", "description": "One reviewer call for every agent model request", "overrides": {"reviewer_mode": "per_model_request"}},
+    {"name": "auth_warm", "base": "central", "description": "All sessions/mandates already valid", "overrides": {"auth_mode": "warm"}},
+    {"name": "b_lean_connector_coverage", "base": "central", "description": "B has payroll and more consent connectors (lean coverage)", "overrides": {"b_api_units": {"auth": 4, "retrieve_income": 2, "consent_prep": 4}}},
+    {"name": "b_all_stages_api_hypothetical", "base": "central", "description": "Hypothetical: bespoke APIs for every stage, still model-orchestrated", "overrides": {"b_api_units": {"*": "all"}}},
+    {"name": "c_unstructured_disclosures", "base": "central", "description": "C must model-read PDF Loan Estimates and Closing Disclosure", "overrides": {"c_structured_disclosures": false}},
+    {"name": "no_prompt_cache", "base": "central", "description": "No cache reads or writes", "overrides": {"cache": {"A": {"read": 0.0, "write": 0.0}, "B": {"read": 0.0, "write": 0.0}, "C": {"read": 0.0, "write": 0.0}}}},
+    {"name": "batch_8", "base": "central", "description": "Screen batches of up to 8 actions (A_batch and B fallback)", "overrides": {"batch_actions_per_request": 8}},
+    {"name": "serial_only", "base": "central", "description": "No parallel independent retrievals (width 1)", "overrides": {"parallel_width": 1}},
+    {"name": "reasoning_output_x2", "base": "central", "description": "Agent output including reasoning doubled", "overrides": {"output_multiplier": 2.0}},
+    {"name": "monitoring_polls_40", "base": "central", "description": "Forty status checks instead of twenty", "overrides": {"counts": {"monitoring_polls": 40}}}
+  ],
+  "bank_mini_example": {
+    "description": "One deposit institution, two monthly statements, under a valid existing mandate (C) versus connector (B) and browser (A) paths. No claim that every bank offers this operation or structured records.",
+    "mandate_path_steps": [
+      {"step": "endpoint discovery (registry lookup; zero if cached)", "network_requests": 1},
+      {"step": "mandate / credential verification", "network_requests": 1},
+      {"step": "permission check and record-generation request", "network_requests": 1},
+      {"step": "server-side record generation (time, not a request)", "network_requests": 0},
+      {"step": "transfer / download of both statements", "network_requests": 1},
+      {"step": "local receipt and hash verification", "network_requests": 0},
+      {"step": "retries with backoff (expected value)", "network_requests": 0}
+    ],
+    "toy_rtt_s": 0.05,
+    "settings": {
+      "lean": {"rtt_s": 0.05, "server_processing_s": 0.05, "record_generation_s": 0.2, "retry_rate": 0.01, "backoff_s": 0.5},
+      "central": {"rtt_s": 0.05, "server_processing_s": 0.15, "record_generation_s": 2.0, "retry_rate": 0.02, "backoff_s": 1.0},
+      "friction": {"rtt_s": 0.05, "server_processing_s": 0.15, "record_generation_s": 60.0, "retry_rate": 0.05, "backoff_s": 2.0}
+    }
+  },
+  "energy": {
+    "status": "Coefficient sensitivity only. Units are thousands of prefill-token equivalents (kPTE): 1 kPTE = energy to prefill 1,000 uncached input tokens on whatever deployment the reader specifies. Not a measured footprint for any provider or model.",
+    "cache_write_weight": 1.0,
+    "cache_read_weight_kappa": [0.05, 0.1, 0.3],
+    "output_weight_beta": [2, 5, 20],
+    "central_point": {"kappa": 0.1, "beta": 5},
+    "absolute_conversion": {
+      "enabled": false,
+      "wh_per_1k_prefill_token_equivalent": null,
+      "pue": null,
+      "grid_gco2e_per_kwh": null,
+      "note": "Enable only with deployment-specific values. Training energy is excluded and must not be added per call."
+    },
+    "unconverted_drivers": ["browser_action_seconds", "N_external_service_requests", "c_local_ops", "server-side record generation and permission services", "fixed infrastructure"]
+  },
+  "hand_checks": {
+    "note": "Values computed by hand from the inventory before the script was run. A mismatch is a discrepancy to investigate, not a tolerance to widen.",
+    "named_checkpoints": 15,
+    "consequential_actions": 28,
+    "pre_retry_agent_requests_central": {"A_step": 621, "A_batch": 250, "B": 189, "C": 26},
+    "pre_retry_tool_invocations_central": {"A_step": 518, "A_batch": 518, "B": 356, "C": 190},
+    "n_model_requests": {
+      "lean": {"A_step": 530.34, "A_batch": 196.34, "B": 159.54, "C": 47},
+      "central": {"A_step": 674.9, "A_batch": 303.9, "B": 231.94, "C": 54},
+      "friction": {"A_step": 895.2, "A_batch": 587.2, "B": 385.95, "C": 75}
+    },
+    "cost_usd_astra_opus": {
+      "lean": {"A_step": [25.8944225, 9.048242], "A_batch": [11.0030725, 3.943402], "B": [7.8510725, 2.869757], "C": [1.89825, 0.7395]},
+      "central": {"A_step": [81.267475, 30.21932], "A_batch": [40.874225, 15.36052], "B": [29.065285, 11.107942], "C": [4.0782, 1.61064]},
+      "friction": {"A_step": [293.0884, 114.44688], "A_batch": [211.9684, 82.98448], "B": [122.7149375, 48.2147375], "C": [12.5596, 5.00712]}
+    },
+    "serial_upper_envelope_s": {
+      "lean": {"A_step": 2510.4245, "A_batch": 1553.5245, "B": 945.9965, "C": 233.0888},
+      "central": {"A_step": 8746.65, "A_batch": 6501.85, "B": 4006.25, "C": 701.5656},
+      "friction": {"A_step": 40622.0667, "A_batch": 41982.0667, "B": 23260.6083, "C": 3242.3933}
+    },
+    "parallel_critical_path_s": {
+      "central": {"A_step": 3501.6, "A_batch": 2866.4, "B": 2042.7, "C": 511.9284}
+    },
+    "sensitivity_cost_usd_astra_opus": {
+      "reviewer_none": {"A_step": [80.323875, 29.8654], "A_batch": [39.930625, 15.0066], "B": [28.242085, 10.792102], "C": [3.143, 1.2416]},
+      "reviewer_per_model_request": {"A_step": [102.124405, 38.042216], "A_batch": [49.228455, 18.493976], "B": [34.237921, 13.0925452], "C": [4.0114, 1.58428]},
+      "b_all_stages_api_hypothetical": {"B": [15.49387, 5.922244]}
+    },
+    "human_active_minutes": {"lean": 64, "central": 140.5, "friction": 284.5},
+    "calendar_business_days": {"lean": 19, "central": 32, "friction": 55},
+    "bank_example_s": {"toy": 0.2, "lean": 0.624, "central": 2.896, "friction": 61.24},
+    "energy_kpte_central_kappa0.1_beta5": {"A_step": 7718.235, "A_batch": 3910.785, "B": 2798.576, "C": 390.62}
+  }
+}

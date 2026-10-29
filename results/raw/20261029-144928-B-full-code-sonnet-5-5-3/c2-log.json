@@ -1,0 +1,245 @@
+{
+ "application_id": "BHL-26001",
+ "within_limits": true,
+ "final_message": "Application BHL-26001 submitted; intent to proceed recorded (rate 6.25%, payment $3042.41, closing costs $12850).",
+ "code_calls": 47,
+ "llm_calls": 2,
+ "documents": 12,
+ "log": [
+  {
+   "method": "POST",
+   "url": "/api/v2/oauth/token",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/members/M-300417/accounts",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/accounts/JFCU-4417/statements?fromDate=2026-08-01&toDate=2026-09-31",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-4417-202608/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-4417-202609/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/accounts/JFCU-8820/statements?fromDate=2026-08-01&toDate=2026-09-31",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-8820-202608/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/api/v2/statements/JFCU-8820-202609/pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/customer/products",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG2093X/estatements?month=08/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-2093-202608?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG2093X/estatements?month=09/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-2093-202609?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG5561X/estatements?month=08/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-5561-202608?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/products/NG5561X/estatements?month=09/2026",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/ngsb/open/v1/documents/NSB-5561-202609?format=pdf",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers?workerNumber=E10442",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers/E10442/payStatements?since=20260101",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E10442-20261016/file",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E10442-20261002/file",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers?workerNumber=E11873",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/workers/E11873/payStatements?since=20260101",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E11873-20261016/file",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/peoplepay/rest/payStatements/LGH-PS-E11873-20261002/file",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/auth/sessions",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/documents",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-applications/la_1001/submission",
+   "status": 202
+  },
+  {
+   "method": "GET",
+   "url": "/bhl/api/v1/loan-applications/la_1001/loan-estimate",
+   "status": 404
+  },
+  {
+   "method": "GET",
+   "url": "/bhl/api/v1/loan-applications/la_1001/loan-estimate",
+   "status": 404
+  },
+  {
+   "method": "GET",
+   "url": "/bhl/api/v1/loan-applications/la_1001/loan-estimate",
+   "status": 404
+  },
+  {
+   "method": "GET",
+   "url": "/bhl/api/v1/loan-applications/la_1001/loan-estimate",
+   "status": 200
+  },
+  {
+   "method": "GET",
+   "url": "/bhl/api/v1/loan-applications/la_1001/conditions",
+   "status": 200
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/conditions/C-BHL-26001-1/responses",
+   "status": 201
+  },
+  {
+   "method": "POST",
+   "url": "/bhl/api/v1/loan-estimates/LE-BHL-26001-1/intent-to-proceed",
+   "status": 201
+  }
+ ]
+}

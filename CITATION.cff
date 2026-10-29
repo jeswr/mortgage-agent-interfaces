@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this testbed or data, please cite it as below."
+title: "Mortgage agent interfaces: testbed and run logs"
+version: 1.0.0
+date-released: 2026-10-29
+license: MIT
+repository-code: "https://github.com/jeswr/mortgage-agent-interfaces"
+authors:
+  - family-names: Wright
+    given-names: Jesse
+    affiliation: University of Oxford
+keywords:
+  - AI agents
+  - agent interfaces
+  - APIs
+  - personal agents
+  - measurement

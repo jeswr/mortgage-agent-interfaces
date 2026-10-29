@@ -1,0 +1,34 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-140504-friction-B-sonnet-5-5-2"
+   ]
+  },
+  "browser": {
+   "command": "npx",
+   "args": [
+    "-y",
+    "@playwright/mcp@0.0.83",
+    "--headless",
+    "--isolated",
+    "--output-dir",
+    "./results/raw/20261029-140504-friction-B-sonnet-5-5-2/work/downloads",
+    "--allowed-origins",
+    "http://127.0.0.1:7124",
+    "--viewport-size",
+    "1280x900"
+   ]
+  },
+  "http": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-http.js",
+    "./results/raw/20261029-140504-friction-B-sonnet-5-5-2",
+    "http://127.0.0.1:7121,http://127.0.0.1:7122,http://127.0.0.1:7123"
+   ]
+  }
+ }
+}

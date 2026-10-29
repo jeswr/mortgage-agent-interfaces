@@ -1,0 +1,19 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-131740-C1-opus-5-5-2"
+   ]
+  },
+  "agentapi": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-agentapi.js",
+    "./results/raw/20261029-131740-C1-opus-5-5-2",
+    "7200"
+   ]
+  }
+ }
+}

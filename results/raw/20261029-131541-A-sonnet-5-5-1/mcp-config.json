@@ -1,0 +1,26 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-131541-A-sonnet-5-5-1"
+   ]
+  },
+  "browser": {
+   "command": "npx",
+   "args": [
+    "-y",
+    "@playwright/mcp@0.0.83",
+    "--headless",
+    "--isolated",
+    "--output-dir",
+    "./results/raw/20261029-131541-A-sonnet-5-5-1/work/downloads",
+    "--allowed-origins",
+    "http://127.0.0.1:7101;http://127.0.0.1:7102;http://127.0.0.1:7103;http://127.0.0.1:7104",
+    "--viewport-size",
+    "1280x900"
+   ]
+  }
+ }
+}

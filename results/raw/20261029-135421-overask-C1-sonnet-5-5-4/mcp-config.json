@@ -1,0 +1,19 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-135421-overask-C1-sonnet-5-5-4"
+   ]
+  },
+  "agentapi": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-agentapi.js",
+    "./results/raw/20261029-135421-overask-C1-sonnet-5-5-4",
+    "7200"
+   ]
+  }
+ }
+}

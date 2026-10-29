@@ -1,0 +1,21 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-145402-B-full-sonnet-5-5-3",
+    "cond=baseline"
+   ]
+  },
+  "http": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-http.js",
+    "./results/raw/20261029-145402-B-full-sonnet-5-5-3",
+    "http://127.0.0.1:7101,http://127.0.0.1:7102,http://127.0.0.1:7103,http://127.0.0.1:7104",
+    "upload"
+   ]
+  }
+ }
+}

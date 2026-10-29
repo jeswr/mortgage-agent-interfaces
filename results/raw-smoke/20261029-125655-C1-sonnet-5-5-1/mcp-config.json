@@ -1,0 +1,19 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw-smoke/20261029-125655-C1-sonnet-5-5-1"
+   ]
+  },
+  "agentapi": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-agentapi.js",
+    "./results/raw-smoke/20261029-125655-C1-sonnet-5-5-1",
+    "7100"
+   ]
+  }
+ }
+}
