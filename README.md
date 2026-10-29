@@ -50,6 +50,6 @@ Conditions are selected as described in `results/README.md`.
 
 Code: MIT (see `LICENSE`). Data, run logs and paper: CC BY 4.0.
 
-## Citation
+## Versions and citation
 
-See `CITATION.cff`.
+Releases are versioned with semantic-release from Conventional Commit messages (`feat:` gives a minor release, `fix:` a patch, a `BREAKING CHANGE:` footer a major one). Each GitHub release is archived by Zenodo, which assigns it a DOI; cite the version you used. See `CITATION.cff` and `CHANGELOG.md`.
