@@ -1,0 +1,1 @@
+{"name":"mortgage-agent-testbed","private":true,"version":"1.0.0","description":"Mortgage agent measurement testbed","dependencies":{"@sparq-org/sparq":"0.1.5","jsonld":"9.0.0"}}

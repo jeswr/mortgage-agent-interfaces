@@ -23,7 +23,7 @@ Claude Sonnet 5.5, five runs per set-up, 29 October 2026 (medians):
 | Per-organization APIs, routine steps in code | 2 | 0.02M | 23 s |
 | Common agent API, routine steps in code | 2 | 0.02M | 22 s |
 
-96 runs in total, across four conditions (baseline, friction, a lender asking for more than authorized, an out-of-limits offer) and two models. Full results, method and threats to validity: [`results/README.md`](results/README.md).
+126 runs in total, across five conditions (baseline, friction, a lender asking for more than authorized, an out-of-limits offer, and a realistic condition with lender choice and human sign-in steps), seven set-ups (including an RDF/JSON-LD variant of the common API with a SPARQL index) and two models. `paper/realism-survey.md` compares each part of the sandbox with services that exist today. Full results, method and threats to validity: [`results/README.md`](results/README.md).
 
 ## Layout
 

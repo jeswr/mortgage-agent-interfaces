@@ -1,0 +1,7 @@
+{"ts":"2026-10-29T16:00:10.306Z","tool":"get_authority"}
+{"ts":"2026-10-29T16:00:10.319Z","tool":"get_credentials"}
+{"ts":"2026-10-29T16:00:20.447Z","tool":"approve_grant","org":"jfcu","scope":"Last 2 monthly statements for Sam's checking and savings, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T16:00:20.858Z","tool":"approve_grant","org":"nsb","scope":"Last 2 monthly statements for Nadia's checking and savings, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T16:00:21.692Z","tool":"approve_grant","org":"lgh","scope":"Last 2 payslips for Sam and for Nadia, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T16:00:22.503Z","tool":"approve_grant","org":"bhl","scope":"Submit mortgage application with credit check and esign consent, respond to conditions, accept intent to proceed, for mortgage-application:14-larch-lane","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T16:01:02.598Z","tool":"ask_user","question":"Brightpath's underwriter asks for a written explanation of the $8,000.00 mobile check deposit (check #1042) on 09/03/2026 into Sam's Juniper checking ending 4417. What was the source of this deposit?","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

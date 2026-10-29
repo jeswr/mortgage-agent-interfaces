@@ -3,9 +3,9 @@
 // Uniform tool set over the common agent API (arm C1).
 // Usage: node mcp-agentapi.js <runDir> <basePort>
 const fs = require('fs'); const path = require('path'); const { serve } = require('./mcp-lib'); const D = require('./data');
-const dir = process.argv[2]; const base = Number(process.argv[3]);
-const orgUrl = (k) => { if (!D.ORGS[k]) throw new Error(`unknown org key ${k}; use one of ${Object.keys(D.ORGS).join(', ')}`); return `http://127.0.0.1:${base + D.ORGS[k].offset}`; };
-const keys = Object.keys(D.ORGS).join(', ');
+const dir = process.argv[2]; const base = Number(process.argv[3]); const ORGS = process.argv[4] === 'realistic' ? { ...D.ORGS, cml: D.EXTRA_ORGS.cml, srm: D.EXTRA_ORGS.srm } : D.ORGS;
+const orgUrl = (k) => { if (!ORGS[k]) throw new Error(`unknown org key ${k}; use one of ${Object.keys(ORGS).join(', ')}`); return `http://127.0.0.1:${base + ORGS[k].offset}`; };
+const keys = Object.keys(ORGS).join(', ');
 serve('agentapi', [
   { name: 'agent_describe', description: `Describe the operations an organization supports on the common agent API. org is one of: ${keys}.`, inputSchema: { type: 'object', properties: { org: { type: 'string' } }, required: ['org'] },
     handler: async (a) => (await fetch(orgUrl(a.org) + '/agent/v1/describe')).text() },

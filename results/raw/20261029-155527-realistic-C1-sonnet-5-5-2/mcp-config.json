@@ -1,0 +1,23 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-155527-realistic-C1-sonnet-5-5-2",
+    "cond=realistic",
+    "seed=20261029-155527-realistic-C1-sonnet-5-5-2",
+    "human=grant"
+   ]
+  },
+  "agentapi": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-agentapi.js",
+    "./results/raw/20261029-155527-realistic-C1-sonnet-5-5-2",
+    "7200",
+    "realistic"
+   ]
+  }
+ }
+}

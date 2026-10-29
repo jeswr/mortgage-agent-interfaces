@@ -1,0 +1,7 @@
+{"ts":"2026-10-29T15:58:01.265Z","tool":"get_authority"}
+{"ts":"2026-10-29T15:58:01.426Z","tool":"get_credentials"}
+{"ts":"2026-10-29T15:58:11.645Z","tool":"request_consent","org":"jfcu","scopes":"read accounts and statements (Sam checking and savings), for the mortgage application","approved":true}
+{"ts":"2026-10-29T15:58:12.033Z","tool":"request_consent","org":"nsb","scopes":"read accounts and statements (Nadia checking and savings), for the mortgage application","approved":true}
+{"ts":"2026-10-29T15:58:12.491Z","tool":"request_consent","org":"lgh","scopes":"read worker info and pay statements for Sam and Nadia, for the mortgage application","approved":true}
+{"ts":"2026-10-29T15:58:12.812Z","tool":"request_consent","org":"bhl","scopes":"create and submit a loan application, upload documents, credit check and e-disclosure consent","approved":true}
+{"ts":"2026-10-29T15:59:55.765Z","tool":"ask_user","question":"Brightpath's underwriter asks about the $8,000.00 mobile check deposit (check #1042) on 09/03/2026 into Sam's Juniper checking ending 4417. What was the source of that deposit? A short written explanation is enough, and they may ask for supporting documents later.","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}

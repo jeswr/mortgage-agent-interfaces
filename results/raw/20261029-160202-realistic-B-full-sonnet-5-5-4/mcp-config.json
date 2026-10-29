@@ -1,0 +1,23 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-160202-realistic-B-full-sonnet-5-5-4",
+    "cond=realistic",
+    "seed=20261029-160202-realistic-B-full-sonnet-5-5-4",
+    "human=consent"
+   ]
+  },
+  "http": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-http.js",
+    "./results/raw/20261029-160202-realistic-B-full-sonnet-5-5-4",
+    "http://127.0.0.1:7141,http://127.0.0.1:7142,http://127.0.0.1:7143,http://127.0.0.1:7144,http://127.0.0.1:7145,http://127.0.0.1:7146",
+    "upload"
+   ]
+  }
+ }
+}

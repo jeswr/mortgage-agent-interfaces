@@ -1,0 +1,101 @@
+{
+ "application_id": "BHL-26001",
+ "chosen_lender": "bhl",
+ "t_choice_s": 0.016,
+ "within_limits": true,
+ "final_message": "Application BHL-26001 submitted; intent to proceed recorded (rate 6.25%, payment $3042.41, closing costs $12850).",
+ "code_calls": 18,
+ "llm_calls": 2,
+ "log": [
+  {
+   "org": "bhl",
+   "operation": "products.list",
+   "status": 200
+  },
+  {
+   "org": "cml",
+   "operation": "products.list",
+   "status": 200
+  },
+  {
+   "org": "srm",
+   "operation": "products.list",
+   "status": 200
+  },
+  {
+   "org": "jfcu",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "jfcu",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "nsb",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "nsb",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.list",
+   "status": 200
+  },
+  {
+   "org": "lgh",
+   "operation": "records.provide",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.submit",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "application.status",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "condition.respond",
+   "status": 200
+  },
+  {
+   "org": "bhl",
+   "operation": "estimate.accept_intent",
+   "status": 200
+  }
+ ]
+}

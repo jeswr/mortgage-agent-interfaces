@@ -5,20 +5,41 @@
 const fs = require('fs');
 const path = require('path');
 const D = require('./data');
-const { askUser, reissueToken, notifyUser } = require('./user-tool');
+const F = require('./fixtures');
+const { askUser, reissueToken, notifyUser, approveGrant } = require('./user-tool');
 const { runClaude } = require('./llm');
 
-async function runC2({ cond, runDir, workDir, base, model, env, streamFile, stderrFile, timeoutMs }) {
+async function runC2({ cond, seed, runDir, workDir, base, model, env, streamFile, stderrFile, timeoutMs }) {
   const auth = JSON.parse(fs.readFileSync(path.join(runDir, 'authority.json'), 'utf8'));
   const cred = JSON.parse(fs.readFileSync(path.join(runDir, 'credentials.json'), 'utf8'));
   const log = []; let codeCalls = 0; let llmCalls = 0; const t0 = Date.now();
-  const id = cred.identifiers;
+  const id = { ...cred.identifiers };
+  const ORGS = { ...D.ORGS, ...D.EXTRA_ORGS };
+  let LK = 'bhl'; let tChoice = null;
+  if (cond === 'realistic') {
+    // Discovery in code: public products.list at each lender; choose the lowest 30-year fixed rate whose example figures fit the limits.
+    const lim = auth.machine_readable.limits; const offers = [];
+    for (const k of D.LENDER_KEYS) {
+      codeCalls++; const r = await fetch(`http://127.0.0.1:${base + ORGS[k].offset}/agent/v1/request`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'products.list' }) });
+      const j = await r.json(); log.push({ org: k, operation: 'products.list', status: r.status });
+      for (const x of j.products) if (x.term_years === 30 && x.rate_type === 'fixed' && x.rate_percent <= lim.max_rate_percent && x.estimated_monthly_payment <= lim.max_monthly_payment && x.estimated_closing_costs <= lim.max_closing_costs) offers.push({ k, ...x });
+    }
+    offers.sort((a, b) => a.rate_percent - b.rate_percent); LK = offers[0].k; tChoice = (Date.now() - t0) / 1000;
+    id.lender_recipient = F.LENDER_IDS[LK];
+    // The same human approval function the agents call: one grant approval per organization.
+    cred.permission_tokens = [];
+    for (const org of ['jfcu', 'nsb', 'lgh', LK]) {
+      const out = JSON.parse(approveGrant(org, 'authorised records / application for this mortgage', LK, runDir, seed));
+      for (const t of out.tokens) cred.permission_tokens.push({ org: org === LK ? 'bhl' : org, subject: t.subject, token: t.token });
+    }
+  }
+  const lenderOrg = (o) => (o === 'bhl' ? LK : o);
   const tokenFor = (org, subject) => cred.permission_tokens.find((t) => t.org === org && (!subject || t.subject === subject)).token;
   const current = {}; // original token -> currently valid token (re-issued after expiry)
   async function call(org, operation, subject, permission_token, params) {
     for (let attempt = 0; attempt < 4; attempt++) {
       codeCalls++; const tok = current[permission_token] || permission_token;
-      const r = await fetch(`http://127.0.0.1:${base + D.ORGS[org].offset}/agent/v1/request`, { method: 'POST', headers: { 'content-type': 'application/json' },
+      const r = await fetch(`http://127.0.0.1:${base + ORGS[lenderOrg(org)].offset}/agent/v1/request`, { method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ operation, subject, on_behalf_of: subject, recipient: id.lender_recipient, purpose: id.purpose, permission_token: tok, params }) });
       const j = await r.json(); log.push({ org, operation, status: r.status });
       if (r.status === 200) return j;
@@ -78,7 +99,7 @@ async function runC2({ cond, runDir, workDir, base, model, env, streamFile, stde
   const final = within ? `Application ${sub.application_id} submitted; intent to proceed recorded (rate ${le.rate_percent}%, payment $${le.estimated_total_monthly_payment}, closing costs $${le.closing_costs}).`
     : `Application ${sub.application_id} submitted, but the Loan Estimate is outside your limits (rate ${le.rate_percent}% vs ${L.max_rate_percent}%, payment $${le.estimated_total_monthly_payment} vs $${L.max_monthly_payment}, closing costs $${le.closing_costs} vs $${L.max_closing_costs}); intent to proceed was NOT recorded.`;
   if (!within) notifyUser(final, path.join(runDir, 'user-tool.jsonl'));
-  const summary = { application_id: sub.application_id, within_limits: within, final_message: final, code_calls: codeCalls, llm_calls: llmCalls, log };
+  const summary = { application_id: sub.application_id, chosen_lender: LK, t_choice_s: tChoice, within_limits: within, final_message: final, code_calls: codeCalls, llm_calls: llmCalls, log };
   fs.writeFileSync(path.join(runDir, 'c2-log.json'), JSON.stringify(summary, null, 1));
   return summary;
 }

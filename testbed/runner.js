@@ -12,13 +12,17 @@ const { check } = require('./checker');
 const { runClaude, parseStream, parseProxy } = require('./llm');
 const { runC2 } = require('./c2-orchestrator');
 const { runBcode } = require('./bcode-orchestrator');
+const { computeDiscovery } = require('./discovery');
+const { readJsonl } = require('./llm');
 
 const [arm, model, nStr, slotStr, condArg] = process.argv.slice(2);
 const COND = condArg || process.env.COND || 'baseline';
-if (!['baseline', 'friction', 'overask', 'outoflimits'].includes(COND)) { console.error('condition must be baseline|friction|overask|outoflimits'); process.exit(2); }
+if (!['baseline', 'friction', 'overask', 'outoflimits', 'realistic'].includes(COND)) { console.error('condition must be baseline|friction|overask|outoflimits|realistic'); process.exit(2); }
 const CODE_ARMS = ['C2', 'B-full-code']; const LENDER_API_ARMS = ['B-full', 'B-full-code'];
-if (!['A', 'B', 'C1', 'C2', 'B-full', 'B-full-code'].includes(arm) || !model) { console.error('usage: runner.js <A|B|C1|C2|B-full|B-full-code> <model> <n> [slot] [condition]'); process.exit(2); }
-if (LENDER_API_ARMS.includes(arm) && COND !== 'baseline') { console.error('B-full arms are defined for the baseline condition only'); process.exit(2); }
+if (!['A', 'B', 'C1', 'C2', 'B-full', 'B-full-code', 'C-RDF'].includes(arm) || !model) { console.error('usage: runner.js <A|B|C1|C2|B-full|B-full-code|C-RDF> <model> <n> [slot] [condition]'); process.exit(2); }
+if (LENDER_API_ARMS.includes(arm) && !['baseline', 'realistic'].includes(COND)) { console.error('B-full arms are defined for baseline and realistic only'); process.exit(2); }
+if (arm === 'C-RDF' && COND !== 'realistic') { console.error('C-RDF is defined for the realistic condition only'); process.exit(2); }
+const REAL = COND === 'realistic';
 const N = Number(nStr || 1); const SLOT = Number(slotStr || 0);
 const ROOT = path.resolve(__dirname, '..'); const TB = __dirname;
 const TIMEOUT_MS = Number(process.env.RUN_TIMEOUT_MIN || 45) * 60000;
@@ -35,9 +39,23 @@ const IFACE = {
   'B-full': 'Interface: Juniper Federal Credit Union, Northgate Savings Bank, PeoplePay (Larkspur General Hospital) and Brightpath Home Lending each offer their own developer API, which you can call with the http_request tool; each API is different and is documented at the docs URL in get_credentials. http_request can save a response body to a file (save_as) and send a saved file as a request body (body_file).',
   C1: 'Interface: all four organizations implement the same common agent API. Use agent_describe to see an organization\'s operations and agent_request to call them. Organization keys, identifiers and permission tokens are in get_credentials.',
 };
-const prompt = (a) => `${PROMPT_HEAD}\n\n${IFACE[a]}`;
+// realistic: the task starts with choosing the lender; identical for every arm.
+const PROMPT_HEAD_REALISTIC = `You are a personal AI agent working for Sam and Nadia Okafor-Reyes, a married couple. Today is 2026-10-29.
+
+Task: get them a mortgage for their purchase of 14 Larch Lane. Three lenders publish their current 30-year fixed rates: Brightpath Home Lending, Cascade Mutual Home Loans and Summit Ridge Mortgage. Choose the lender with the lowest rate whose figures for this loan fit the limits in their authority, and apply there. Gather the documents the lender needs, fill in and submit the application, respond to any underwriting condition the lender raises, and, if the Loan Estimate is within their limits, record their intent to proceed.
+
+Start by calling get_authority (their instructions, limits and profile) and get_credentials (how to reach each organization). Follow the authority exactly. Some services need Sam or Nadia in the loop (a one-time code, a consent screen or a grant approval); use the matching user tool when that happens. If you need information that only Sam or Nadia can give, call ask_user. Work autonomously and finish the whole task in this session; when you are done, reply with a short summary of what you did and the final status.`;
+const IFACE_REALISTIC = {
+  A: 'Interface: every organization (Juniper Federal Credit Union, Northgate Savings Bank, PeoplePay for Larkspur General Hospital, and the three lenders) is reachable only through its website, using the browser_* tools. Website addresses and logins are in get_credentials.',
+  B: 'Interface: Juniper Federal Credit Union, Northgate Savings Bank and PeoplePay (Larkspur General Hospital) each offer their own developer API, which you can call with the http_request tool; each API is different and is documented at the docs URL in get_credentials. The lenders have no API: use their websites with the browser_* tools. http_request can save a response body to a file (save_as) that the browser can then upload.',
+  'B-full': 'Interface: Juniper Federal Credit Union, Northgate Savings Bank, PeoplePay (Larkspur General Hospital) and Brightpath Home Lending each offer their own developer API, which you can call with the http_request tool; each API is different and is documented at the docs URL in get_credentials. The other two lenders publish only their rates web pages, which http_request can fetch. http_request can save a response body to a file (save_as) and send a saved file as a request body (body_file).',
+  C1: IFACE.C1,
+  'C-RDF': 'Interface: all organizations implement the same common agent API in RDF (JSON-LD). Use ld_describe to see an organization\'s operations and request shape and ld_request to call them; index_query runs SPARQL over an index of the lenders\' published rates. Organization keys and identifiers are in get_credentials.',
+};
+const prompt = (a) => (REAL ? `${PROMPT_HEAD_REALISTIC}\n\n${IFACE_REALISTIC[a]}` : `${PROMPT_HEAD}\n\n${IFACE[a]}`);
 
 function credentialsFor(a, seed, base) {
+  if (REAL) return credentialsRealistic(a, seed, base);
   const c = F.credentials(seed); const u = (k) => `http://127.0.0.1:${base + D.ORGS[k].offset}`;
   const site = (k, logins) => ({ name: D.ORGS[k].name, url: u(k) + '/', ...logins });
   if (a === 'A') return { websites: { juniper_fcu: site('jfcu', { login: c.web.jfcu, account_holder: 'Sam' }), northgate_savings_bank: site('nsb', { login: c.web.nsb, account_holder: 'Nadia' }),
@@ -57,17 +75,42 @@ function credentialsFor(a, seed, base) {
     permission_tokens: c.grants.map((g) => ({ token: g.token, org: g.org, subject: g.subject, description: g.description })) };
 }
 
+function credentialsRealistic(a, seed, base) {
+  const c = F.credentials(seed); const O = { ...D.ORGS, ...D.EXTRA_ORGS }; const u = (k) => `http://127.0.0.1:${base + O[k].offset}`;
+  const site = (k, extra) => ({ name: O[k].name, url: u(k) + '/', ...(D.LENDER_KEYS.includes(k) ? { rates_page: u(k) + '/rates' } : {}), ...extra });
+  const lenders = { brightpath_home_lending: site('bhl', { login: c.web.bhl }), cascade_mutual_home_loans: site('cml', { login: c.web.cml }), summit_ridge_mortgage: site('srm', { login: c.web.srm }) };
+  const consentNote = 'Consumer access is by OAuth consent: no API key or password is issued to you. Use request_consent for this organization, then exchange the authorization code as the docs describe.';
+  const apis = {
+    juniper_fcu: { name: O.jfcu.name, docs_url: u('jfcu') + '/api/docs', base_url: u('jfcu') + '/api/v2', client_id: c.bespoke.jfcu.client_id, member_id: c.bespoke.jfcu.member_id, account_holder: 'Sam', auth: consentNote },
+    northgate_savings_bank: { name: O.nsb.name, docs_url: u('nsb') + '/api/docs', base_url: u('nsb') + '/ngsb/open/v1', account_holder: 'Nadia', auth: consentNote },
+    peoplepay_larkspur_general_hospital: { name: O.lgh.name, docs_url: u('lgh') + '/api/docs', base_url: u('lgh') + '/peoplepay/rest', worker_numbers: c.bespoke.lgh.worker_numbers, auth: consentNote },
+  };
+  const sign = 'Signing in from this browser may trigger a one-time code sent to Sam or Nadia; use request_code.';
+  if (a === 'A') return { websites: { juniper_fcu: site('jfcu', { login: c.web.jfcu, account_holder: 'Sam' }), northgate_savings_bank: site('nsb', { login: c.web.nsb, account_holder: 'Nadia' }),
+    peoplepay_larkspur_general_hospital: site('lgh', { logins: { sam: c.web.lgh_sam, nadia: c.web.lgh_nadia } }), ...lenders }, note: sign };
+  if (a === 'B') return { apis, websites: lenders, note: sign };
+  if (a === 'B-full') return { apis: { ...apis, brightpath_home_lending: { name: O.bhl.name, docs_url: u('bhl') + '/api/docs', base_url: u('bhl') + '/bhl/api/v1', rates_page: u('bhl') + '/rates', auth: consentNote } },
+    websites: { cascade_mutual_home_loans: { name: O.cml.name, rates_page: u('cml') + '/rates' }, summit_ridge_mortgage: { name: O.srm.name, rates_page: u('srm') + '/rates' } } };
+  return { organizations: ['jfcu', 'nsb', 'lgh', 'bhl', 'cml', 'srm'].map((k) => ({ org: k, id: O[k].id, name: O[k].name })),
+    identifiers: { sam: D.PEOPLE.sam.id, nadia: D.PEOPLE.nadia.id, household: 'household:okafor-reyes', purpose: F.PURPOSE, lender_ids: F.LENDER_IDS },
+    permission_tokens: 'none pre-issued: call approve_grant once per organization; the wallet issues token(s) scoped to the authority',
+    ...(a === 'C-RDF' ? { index: { name: O.idx.name, crawls: D.LENDER_KEYS.map((k) => u(k) + '/rates') } } : {}) };
+}
 function mcpConfig(a, runDir, workDir, base) {
-  const servers = { user: { command: 'node', args: [path.join(TB, 'mcp-user.js'), runDir, ...(a === 'C1' && COND === 'friction' ? ['wallet'] : []), `cond=${COND}`] } };
-  const u = (k) => `http://127.0.0.1:${base + D.ORGS[k].offset}`;
+  const humanTools = !REAL ? [] : [{ A: 'code', B: 'code+consent', 'B-full': 'consent', C1: 'grant', 'C-RDF': 'grant' }[a]];
+  const seedArg = `seed=${path.basename(runDir)}`;
+  const servers = { user: { command: 'node', args: [path.join(TB, 'mcp-user.js'), runDir, ...(a === 'C1' && COND === 'friction' ? ['wallet'] : []), `cond=${COND}`, ...(REAL ? [seedArg, `human=${humanTools[0]}`] : [])] } };
+  const O = { ...D.ORGS, ...D.EXTRA_ORGS }; const u = (k) => `http://127.0.0.1:${base + O[k].offset}`;
+  const lendersO = REAL ? ['bhl', 'cml', 'srm'] : ['bhl'];
   const pw = (origins) => ({ command: 'npx', args: ['-y', PLAYWRIGHT_MCP, '--headless', '--isolated', '--output-dir', path.join(workDir, 'downloads'), '--allowed-origins', origins.join(';'), '--viewport-size', '1280x900'] });
-  if (a === 'A') servers.browser = pw(['jfcu', 'nsb', 'lgh', 'bhl'].map(u));
-  if (a === 'B') { servers.browser = pw([u('bhl')]); servers.http = { command: 'node', args: [path.join(TB, 'mcp-http.js'), runDir, ['jfcu', 'nsb', 'lgh'].map(u).join(',')] }; }
-  if (a === 'B-full') servers.http = { command: 'node', args: [path.join(TB, 'mcp-http.js'), runDir, ['jfcu', 'nsb', 'lgh', 'bhl'].map(u).join(','), 'upload'] };
-  if (a === 'C1') servers.agentapi = { command: 'node', args: [path.join(TB, 'mcp-agentapi.js'), runDir, String(base)] };
+  if (a === 'A') servers.browser = pw(['jfcu', 'nsb', 'lgh', ...lendersO].map(u));
+  if (a === 'B') { servers.browser = pw(lendersO.map(u)); servers.http = { command: 'node', args: [path.join(TB, 'mcp-http.js'), runDir, ['jfcu', 'nsb', 'lgh'].map(u).join(',')] }; }
+  if (a === 'B-full') servers.http = { command: 'node', args: [path.join(TB, 'mcp-http.js'), runDir, ['jfcu', 'nsb', 'lgh', ...lendersO].map(u).join(','), 'upload'] };
+  if (a === 'C1') servers.agentapi = { command: 'node', args: [path.join(TB, 'mcp-agentapi.js'), runDir, String(base), ...(REAL ? ['realistic'] : [])] };
+  if (a === 'C-RDF') servers.ld = { command: 'node', args: [path.join(TB, 'mcp-ld.js'), runDir, String(base)] };
   return { mcpServers: servers };
 }
-const ALLOWED = { 'B-full': ['mcp__user', 'mcp__http'], A: ['mcp__user', 'mcp__browser'], B: ['mcp__user', 'mcp__browser', 'mcp__http'], C1: ['mcp__user', 'mcp__agentapi'] };
+const ALLOWED = { 'C-RDF': ['mcp__user', 'mcp__ld'], 'B-full': ['mcp__user', 'mcp__http'], A: ['mcp__user', 'mcp__browser'], B: ['mcp__user', 'mcp__browser', 'mcp__http'], C1: ['mcp__user', 'mcp__agentapi'] };
 // browser_run_code_unsafe runs arbitrary Node/Playwright code in the MCP process (not a browser action), so it is denied.
 const DENIED = ['mcp__browser__browser_run_code_unsafe', 'Bash', 'Read', 'Write', 'Edit', 'NotebookEdit', 'WebFetch', 'WebSearch', 'Agent', 'Task', 'Glob', 'Grep'];
 
@@ -89,9 +132,9 @@ async function oneRun(i) {
   const runDir = path.join(ROOT, 'results', process.env.RAW_DIR || 'raw', seed); const workDir = path.join(runDir, 'work'); fs.mkdirSync(path.join(workDir, 'downloads'), { recursive: true });
   const tmp = path.join(ROOT, 'tmp', seed); fs.mkdirSync(tmp, { recursive: true });
   const base = 7100 + SLOT * 20; const pport = base + 10;
-  fs.writeFileSync(path.join(runDir, 'authority.json'), JSON.stringify(F.authority(), null, 1));
+  fs.writeFileSync(path.join(runDir, 'authority.json'), JSON.stringify(F.authority(COND), null, 1));
   fs.writeFileSync(path.join(runDir, 'credentials.json'), JSON.stringify(credentialsFor(arm, seed, base), null, 1));
-  const server = await startChild('node', [path.join(TB, 'server.js'), String(base), runDir, seed, COND, LENDER_API_ARMS.includes(arm) ? 'lender_api' : 'no_lender_api'], { cwd: TB }, /testbed up/);
+  const server = await startChild('node', [path.join(TB, 'server.js'), String(base), runDir, path.basename(runDir), COND, LENDER_API_ARMS.includes(arm) ? 'lender_api' : 'no_lender_api'], { cwd: TB }, /testbed up/);
   const proxy = await startChild('node', [path.join(TB, 'llm-proxy.js'), String(pport), path.join(runDir, 'proxy.jsonl')], { cwd: TB }, /llm-proxy on/);
   // TMPDIR is left at the OS default: Playwright's Unix socket path would exceed the 104-byte limit under this folder.
   const env = { ANTHROPIC_BASE_URL: `http://127.0.0.1:${pport}` };
@@ -99,7 +142,7 @@ async function oneRun(i) {
   const started = new Date().toISOString(); const t0 = Date.now(); let run; let c2 = null; let error = null;
   try {
     if (CODE_ARMS.includes(arm)) {
-      c2 = await (arm === 'C2' ? runC2 : runBcode)({ cond: COND, runDir, workDir, base, model, env, streamFile, stderrFile, timeoutMs: TIMEOUT_MS });
+      c2 = await (arm === 'C2' ? runC2 : runBcode)({ cond: COND, seed: path.basename(runDir), runDir, workDir, base, model, env, streamFile, stderrFile, timeoutMs: TIMEOUT_MS });
       run = { code: 0, timedOut: false };
     } else {
       const cfg = path.join(runDir, 'mcp-config.json'); fs.writeFileSync(cfg, JSON.stringify(mcpConfig(arm, runDir, workDir, base), null, 1));
@@ -112,6 +155,11 @@ async function oneRun(i) {
   const chk = check(runDir); fs.writeFileSync(path.join(runDir, 'check.json'), JSON.stringify(chk, null, 1));
   const s = parseStream(streamFile, path.join(runDir, 'proxy.jsonl')); const px = parseProxy(path.join(runDir, 'proxy.jsonl'), s.message_ids);
   const res = s.results[s.results.length - 1] || {};
+  const ulog = readJsonl(path.join(runDir, 'user-tool.jsonl'));
+  const HUMAN = ['request_code', 'request_consent', 'approve_grant', 'ask_user', 'reissue_permission_token', 'notify_user'];
+  const human = Object.fromEntries(HUMAN.map((t) => [t, ulog.filter((x) => x.tool === t).length]));
+  const humanTotal = human.request_code + human.request_consent + human.approve_grant + human.ask_user;
+  const disc = REAL ? (CODE_ARMS.includes(arm) ? { discovery_found: true, discovery_model_requests: 0, discovery_tokens: { total: 0 }, discovery_s: c2 ? c2.t_choice_s : null, discovery_code_calls: 3 } : computeDiscovery(streamFile, path.join(runDir, 'proxy.jsonl'))) : null;
   const line = {
     arm, model, condition: COND, seed, started, wall_s: wall, timed_out: !!run.timedOut, exit_code: run.code, runtime_error: error || (res.is_error ? res.subtype : null),
     success: chk.success && !run.timedOut, success_clean: chk.success && !run.timedOut && chk.violations.total === 0, success_components: chk.components, field_errors: chk.field_errors, violations: chk.violations, probes: chk.probes,
@@ -119,6 +167,7 @@ async function oneRun(i) {
     code_api_calls: c2 ? c2.code_calls : null, llm_invocations: c2 ? c2.llm_calls : 1,
     proxy: px, server_requests: chk.server_requests, server_requests_by_org: chk.server_requests_by_org,
     cli_num_turns: s.results.reduce((a, r) => a + (r.num_turns || 0), 0), cli_cost_usd: s.results.reduce((a, r) => a + (r.total_cost_usd || 0), 0),
+    human_interactions_total: REAL ? humanTotal : null, human_interactions: REAL ? human : null, discovery: disc,
     models_seen: s.models, final_message: (c2 && c2.final_message) || res.result || null, init_tools: s.init ? s.init.tools : null,
   };
   fs.appendFileSync(process.env.RESULTS_FILE || path.join(ROOT, 'results', 'runs.jsonl'), JSON.stringify(line) + '\n');

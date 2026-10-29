@@ -4,3 +4,4 @@ node_modules/
 results/raw/**/downloads/
 results/raw*/**/downloads/
 results/raw*/**/work/
+testbed/node_modules/

@@ -18,13 +18,17 @@ const SEED = process.argv[4] || 'dev';
 // Experimental condition: baseline | friction | overask
 const COND = process.argv[5] || 'baseline';
 const FRICTION = COND === 'friction';
-const LENDER_API = process.argv[6] === 'lender_api'; // arms B-full / B-full-code: the lender also has a bespoke API
+const LENDER_API = process.argv[6] === 'lender_api';
+// "realistic": human-in-the-loop auth (OTP codes, OAuth consent, wallet grant approval), lender discovery, RDF endpoints + rates index.
+const REAL = COND === 'realistic';
+const ORGX = REAL ? { ...D.ORGS, ...D.EXTRA_ORGS } : D.ORGS;
+const HUMAN_OTP = path.join(RUN_DIR, 'human-otp.jsonl'); // arms B-full / B-full-code: the lender also has a bespoke API
 fs.mkdirSync(RUN_DIR, { recursive: true });
 const CRED = F.credentials(SEED);
 const GRANTS = Object.fromEntries(CRED.grants.map((g) => [g.token, g]));
 const LOG = path.join(RUN_DIR, 'server-requests.jsonl');
 const STATE_FILE = path.join(RUN_DIR, 'state.json');
-const url = (k) => `http://127.0.0.1:${BASE + D.ORGS[k].offset}`;
+const url = (k) => `http://127.0.0.1:${BASE + ORGX[k].offset}`;
 
 const state = {
   seed: SEED, condition: COND, friction_events: [], started: new Date().toISOString(),
@@ -91,7 +95,7 @@ function pdf(lines) {
 }
 
 // ---------- documents ----------
-const ORG_NAME = (k) => D.ORGS[k].name;
+const ORG_NAME = (k) => ORGX[k].name;
 function statementLines(s) {
   const L = [ORG_NAME(s.org).toUpperCase(), 'ACCOUNT STATEMENT', `DOCID: ${s.docid}`, `Account holder: ${s.holder}`, `Account: ${s.account_name} ****${s.last4}`,
     `Statement period: ${s.period_start} to ${s.period_end}`, `Opening balance: ${money(s.opening_balance)}    Closing balance: ${money(s.closing_balance)}`, '',
@@ -114,7 +118,7 @@ function docidsIn(buf) { const s = buf.toString('latin1'); const o = new Set(); 
 
 // ---------- web portal chrome ----------
 function layout(k, title, body, req, nav = '') {
-  const o = D.ORGS[k]; const c = cookies(req); const consent = c[`${k}_consent`];
+  const o = ORGX[k]; const c = cookies(req); const consent = c[`${k}_consent`];
   const banner = consent ? '' : `<div id="cookie-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10;display:flex;align-items:flex-end;justify-content:center">
 <div role="dialog" aria-label="Cookie preferences" style="background:#fff;max-width:640px;margin:0 0 24px;padding:18px 22px;border-radius:8px">
 <h2 style="margin-top:0">We value your privacy</h2><p>${esc(o.name)} uses cookies to keep you signed in, to understand how our site is used, and to show you relevant offers from our partners. You can accept all cookies or keep only the ones that are strictly necessary.</p>
@@ -352,9 +356,21 @@ Dates: YYYYMMDD.`,
 const jfcuTokens = new Map(); let jfcuIssued = 0; // token -> uses
 const mdy = (d) => `${d.slice(5, 7)}/${d.slice(8, 10)}/${d.slice(0, 4)}`;
 const ymd = (d) => d.replace(/-/g, '');
+// realistic: consumer access by OAuth authorization code (after the person's consent), refresh without a human.
+const usedCodes = new Set(); const oauthTokens = { nsb: new Set(), lgh: new Set() }; const refreshTokens = {};
+function redeemCode(org, code) { if (!F.checkConsentCode(SEED, org, code) || usedCodes.has(code)) return null; usedCodes.add(code); state.oauth_grants = (state.oauth_grants || 0) + 1; save(); return issuePair(org); }
+function issuePair(org) { const a = `${org}_at_${crypto.randomBytes(10).toString('hex')}`; const r = `${org}_rt_${crypto.randomBytes(10).toString('hex')}`; refreshTokens[r] = org; if (org === 'jfcu') jfcuTokens.set(a, { n: ++jfcuIssued, uses: 0 }); else if (oauthTokens[org]) oauthTokens[org].add(a); return { access: a, refresh: r }; }
+function refresh(org, r) { if (refreshTokens[r] !== org) return null; delete refreshTokens[r]; return issuePair(org); }
 async function bespoke(k, req, res, u, body) {
   const p = u.pathname; let m; const deny = (code, obj) => { state.bespoke_auth_failures.push({ org: k, path: p, ts: new Date().toISOString() }); save(); return json(res, code, obj); };
   if (k === 'jfcu') {
+    if (p === '/api/v2/oauth/token' && req.method === 'POST' && REAL) {
+      const f = /json/.test(req.headers['content-type'] || '') ? JSON.parse(body.toString() || '{}') : parseForm(body);
+      const pair = f.grant_type === 'authorization_code' ? redeemCode('jfcu', f.code) : f.grant_type === 'refresh_token' ? refresh('jfcu', f.refresh_token) : undefined;
+      if (pair === undefined) return deny(400, { error: 'unauthorized_client', error_description: "Consumer access requires the account holder's consent: use grant_type=authorization_code with the code from the consent screen" });
+      if (!pair) return deny(400, { error: 'invalid_grant', error_description: 'authorization code or refresh token is invalid or already used' });
+      return json(res, 200, { access_token: pair.access, token_type: 'Bearer', expires_in: 900, refresh_token: pair.refresh, scope: 'accounts statements' });
+    }
     if (p === '/api/v2/oauth/token' && req.method === 'POST') {
       const f = /json/.test(req.headers['content-type'] || '') ? JSON.parse(body.toString() || '{}') : parseForm(body); const c = CRED.bespoke.jfcu;
       if (f.grant_type !== 'client_credentials' || f.client_id !== c.client_id || f.client_secret !== c.client_secret) return deny(401, { error: 'invalid_client', error_description: 'Client authentication failed' });
@@ -384,7 +400,19 @@ async function bespoke(k, req, res, u, body) {
     return json(res, 404, { error: 'not_found', error_description: 'No such endpoint' });
   }
   if (k === 'nsb') {
+    if (REAL) {
+      if (p === '/ngsb/open/v1/oauth2/token' && req.method === 'POST') {
+        let f = {}; try { f = JSON.parse(body.toString() || '{}'); } catch (e) { /* bad json */ }
+        const pair = /^AUTHORIZATION_CODE$/i.test(f.grantType || '') ? redeemCode('nsb', f.authCode) : /^REFRESH_TOKEN$/i.test(f.grantType || '') ? refresh('nsb', f.refreshToken) : undefined;
+        if (pair === undefined) return deny(400, { status: 'ERROR', code: 'BAD_GRANT_TYPE', message: 'grantType must be AUTHORIZATION_CODE or REFRESH_TOKEN' });
+        if (!pair) return deny(400, { status: 'ERROR', code: 'INVALID_GRANT', message: 'authCode or refreshToken invalid or already used' });
+        return json(res, 200, { data: { accessToken: pair.access, refreshToken: pair.refresh, expiresIn: 900 } });
+      }
+      if (req.headers['x-ngsb-apikey']) return deny(403, { status: 'ERROR', code: 'PARTNERS_ONLY', message: 'API keys are issued to registered partners only; consumers authorise access with OAuth consent (see /api/docs)' });
+      if (!oauthTokens.nsb.has((req.headers.authorization || '').replace(/^Bearer\s+/i, ''))) return deny(401, { status: 'ERROR', code: 'AUTH_REQUIRED', message: 'Bearer access token required' });
+    } else {
     const c = CRED.bespoke.nsb; if (req.headers['x-ngsb-apikey'] !== c.api_key || req.headers['x-ngsb-customer'] !== c.customer_id) return deny(403, { status: 'ERROR', code: 'AUTH_FAILED', message: 'Invalid API key or customer' });
+    }
     const pref = (a) => 'NG' + a.last4 + 'X';
     if (/estatements|documents/.test(p) && transient503('nsb', 'bespoke')) return json(res, 503, { status: 'ERROR', code: 'SERVICE_UNAVAILABLE', message: 'Temporarily unavailable, please retry' });
     if (p === '/ngsb/open/v1/customer/products') return json(res, 200, { data: { products: bankAccounts('nsb').map((a) => ({ productRef: pref(a), productName: a.name, productType: a.kind === 'business' ? 'BUSINESS_CHECKING' : a.type === 'checking' ? 'PERSONAL_CHECKING' : 'PERSONAL_SAVINGS', acctSuffix: a.last4, ledgerBal: D.BALANCE[a.id] })) } });
@@ -403,8 +431,19 @@ async function bespoke(k, req, res, u, body) {
     return json(res, 404, { status: 'ERROR', code: 'NOT_FOUND', message: 'No such endpoint' });
   }
   if (k === 'lgh') {
+    if (REAL) {
+      if (p === '/peoplepay/rest/auth/token' && req.method === 'POST') {
+        const f = parseForm(body); const pair = f.grant_type === 'authorization_code' ? redeemCode('lgh', f.code) : f.grant_type === 'refresh_token' ? refresh('lgh', f.refresh_token) : undefined;
+        if (pair === undefined) return deny(400, { fault: { code: 400, message: 'grant_type must be authorization_code or refresh_token' } });
+        if (!pair) return deny(400, { fault: { code: 400, message: 'invalid or used code / refresh token' } });
+        return json(res, 200, { access_token: pair.access, refresh_token: pair.refresh, expires_in: 900 });
+      }
+      if (/^Basic/i.test(req.headers.authorization || '')) return deny(401, { fault: { code: 401, message: 'Basic authentication is disabled for consumer access; use OAuth (see /api/docs)' } });
+      if (!oauthTokens.lgh.has((req.headers.authorization || '').replace(/^Bearer\s+/i, ''))) return deny(401, { fault: { code: 401, message: 'Bearer access token required' } });
+    } else {
     const c = CRED.bespoke.lgh; const auth = Buffer.from((req.headers.authorization || '').replace(/^Basic\s+/i, ''), 'base64').toString();
     if (auth !== `${c.api_user}:${c.api_password}`) return deny(401, { fault: { code: 401, message: 'Unauthorized' } });
+    }
     if (/payStatements/.test(p) && transient503('lgh', 'bespoke')) return json(res, 503, { fault: { code: 503, message: 'Service Unavailable' } });
     const byWorker = (w) => Object.keys(D.PEOPLE).find((x) => D.PEOPLE[x].employee_id === w);
     if (p === '/peoplepay/rest/workers') {
@@ -450,6 +489,13 @@ POST  /bhl/api/v1/conditions/{id}/responses  body { "data": { "type": "condition
 POST  /bhl/api/v1/conditions/{id}/documents  raw file body (application/pdf) -> 201
 POST  /bhl/api/v1/loan-estimates/{id}/intent-to-proceed  body { "data": { "type": "intents", "attributes": { "signedBy": "..." } } } -> 201
 Errors: { errors: [ { status, code, title, detail } ] }`;
+if (REAL) {
+  const consent = (tokenEp) => `Auth (consumer access): OAuth 2.0 authorization code. API keys and passwords are not issued to consumers. The account holder approves access on our consent screen and receives a one-time authorization code; ${tokenEp}. Access tokens last 15 minutes; refresh with the refresh token (no consent needed).`;
+  DOCS.jfcu = DOCS.jfcu.replace(/Auth: .*\n/, consent('exchange it with POST /api/v2/oauth/token (form) grant_type=authorization_code&code=<code>; refresh with grant_type=refresh_token&refresh_token=<token>. Use "Authorization: Bearer <access_token>"') + '\n');
+  DOCS.nsb = DOCS.nsb.replace(/Auth: .*\n/, consent('exchange it with POST /ngsb/open/v1/oauth2/token JSON { "grantType": "AUTHORIZATION_CODE", "authCode": "<code>" } -> { data: { accessToken, refreshToken } }; refresh with { "grantType": "REFRESH_TOKEN", "refreshToken": "..." }. Send "Authorization: Bearer <accessToken>"') + '\n');
+  DOCS.lgh = DOCS.lgh.replace(/Auth: .*\n/, consent('exchange it with POST /peoplepay/rest/auth/token (form) grant_type=authorization_code&code=<code> -> { access_token, refresh_token }; one consent covers the household\'s workers. Send "Authorization: Bearer <access_token>"') + '\n');
+  DOCS.bhl = DOCS.bhl.replace(/Auth: POST \/bhl\/api\/v1\/auth\/sessions .*\n/, 'Auth: consumer access by consent. The applicant approves access on our consent screen and receives a one-time authorization code; POST /bhl/api/v1/auth/sessions body { "data": { "type": "sessions", "attributes": { "authorizationCode": "<code>" } } } -> 201 { data: { type: "sessions", id } }.\n');
+}
 const bhlSessions = new Set();
 async function lenderApi(req, res, u, body) {
   const p = u.pathname.replace(/^\/bhl\/api\/v1/, ''); let m;
@@ -458,7 +504,7 @@ async function lenderApi(req, res, u, body) {
   const parse = () => { try { return JSON.parse(body.toString('utf8') || '{}'); } catch (e) { return null; } };
   if (p === '/auth/sessions' && req.method === 'POST') {
     const b = parse(); const a = b && b.data && b.data.attributes; const c = CRED.bespoke.bhl;
-    if (!a || a.login !== c.login || a.apiSecret !== c.api_secret) { state.bespoke_auth_failures.push({ org: 'bhl', path: p, ts: new Date().toISOString() }); save(); return err(401, 'INVALID_CREDENTIALS', 'Unauthorized', 'login or apiSecret is wrong'); }
+    if (REAL ? !(a && redeemCode('bhl', a.authorizationCode)) : (!a || a.login !== c.login || a.apiSecret !== c.api_secret)) { state.bespoke_auth_failures.push({ org: 'bhl', path: p, ts: new Date().toISOString() }); save(); return err(401, 'INVALID_CREDENTIALS', 'Unauthorized', 'login or apiSecret is wrong'); }
     const id = 'bs_' + crypto.randomBytes(10).toString('hex'); bhlSessions.add(id); return J(201, { data: { type: 'sessions', id, attributes: { expiresIn: 3600 } } });
   }
   const sid = (req.headers.authorization || '').replace(/^BHL-Session\s+/i, '');
@@ -520,8 +566,10 @@ const DESCRIBE_COMMON = {
   rules: 'Every request is checked against permission_token (verbs, objects, recipient, purpose, limits). Denials return 403 with a reason. Results carry origin and permitted_use.',
 };
 function describe(k) {
-  const o = D.ORGS[k];
+  const o = ORGX[k];
+  if (REAL && (k === 'cml' || k === 'srm')) return { organization: o.id, name: o.name, ...DESCRIBE_COMMON, operations: { 'products.list': { params: {}, auth: 'public, no permission_token needed', returns: '{ products: [ ... ] }' } }, note: 'Online applications are not available at this lender.' };
   const ops = k === 'bhl' ? {
+    ...(REAL ? { 'products.list': { params: {}, auth: 'public, no permission_token needed', returns: '{ products: [ { product_code, name, term_years, rate_type, rate_percent, apr_percent, discount_points, example_loan_amount, estimated_monthly_payment, estimated_closing_costs } ] }' } } : {}),
     'application.submit': { params: { application: { borrowers: '[ { name, date_of_birth (YYYY-MM-DD), email, phone, marital_status, employer, position, start_date (YYYY-MM-DD), annual_base_income } ]', current_address: '{ street, city, state, zip, housing, monthly_rent }', property: '{ street, city, state, zip, purchase_price, occupancy }', loan: '{ loan_amount, down_payment, product }', assets: '[ { institution, account_type, last4, balance } ]' }, records: '[ record_ref, ... ] (records provided to this lender by other organizations)', consents: '{ credit_check: true, esign: true }' }, returns: '{ application_id, status }' },
     'application.status': { params: { application_id: 'string' }, returns: '{ application_id, status, loan_estimate|null, conditions: [ { condition_id, text, status } ] }' },
     'condition.respond': { params: { application_id: 'string', condition_id: 'string', response: 'string', records: '[record_ref] optional, records provided to this lender' }, returns: '{ status }' },
@@ -543,14 +591,17 @@ async function agentApi(k, req, res, u, body) {
   if (p === '/agent/v1/describe') return json(res, 200, describe(k));
   let m;
   if ((m = /^\/agent\/v1\/records\/([a-z0-9_]+)$/.exec(p))) { // server-to-server retrieval by the recipient
-    const r = records.get(m[1]); if (!r || r.origin.org !== D.ORGS[k].id) return json(res, 404, { ok: false, error: 'unknown record' });
+    const r = records.get(m[1]); if (!r || r.origin.org !== ORGX[k].id) return json(res, 404, { ok: false, error: 'unknown record' });
     if (req.headers['x-requesting-org'] !== r.permitted_use.recipient) return json(res, 403, { ok: false, error: 'recipient mismatch' });
     return json(res, 200, { ok: true, record: r });
   }
   if (p !== '/agent/v1/request' || req.method !== 'POST') return json(res, 404, { ok: false, error: 'not found' });
   let b; try { b = JSON.parse(body.toString('utf8')); } catch (e) { return json(res, 400, { ok: false, error: 'invalid JSON' }); }
   state.agent.calls.push({ ts: new Date().toISOString(), org: k, operation: b.operation }); save();
-  let g = GRANTS[b.permission_token];
+  if (REAL && D.LENDER_KEYS.includes(k) && b.operation === 'products.list') return json(res, 200, { ok: true, organization: ORGX[k].id, as_of: D.TODAY, products: D.PRODUCTS[k] });
+  if (REAL && (k === 'cml' || k === 'srm')) { otherLender(k, 'agent', b.operation); return json(res, 501, { ok: false, error: 'not_available', reason: 'Online applications are not available at this lender; please call 1-555-0199.' }); }
+  let g = GRANTS[b.permission_token] || (REAL ? F.grantFromToken(SEED, b.permission_token) : null);
+  if (REAL && GRANTS[b.permission_token]) g = null; // pre-issued fixture tokens are not valid in the realistic condition
   // Friction: each grant's original token expires after its first successful use; the user's wallet re-issues it as <token>_r1 (same grant, same scope and counters).
   const reissued = FRICTION && !g && /_r1$/.test(b.permission_token || '') && GRANTS[b.permission_token.slice(0, -3)];
   if (reissued) g = reissued;
@@ -567,8 +618,8 @@ async function agentApi(k, req, res, u, body) {
   if (k !== 'bhl') {
     const who = Object.keys(D.PEOPLE).find((x) => D.PEOPLE[x].id === g.subject);
     if (b.operation === 'records.list') {
-      if (k === 'lgh') return jsonOk(res, 200, { ok: true, origin: D.ORGS[k].id, records: [...D.PAYSLIPS[who]].reverse().map((x) => ({ record_type: 'payslip', record_id: x.docid, pay_date: x.pay_date, period: `${x.period_start}..${x.period_end}`, gross: x.gross, net: x.net })) });
-      return jsonOk(res, 200, { ok: true, origin: D.ORGS[k].id, accounts: bankAccounts(k).map((a) => ({ account_id: a.id, name: a.name, type: a.type, ownership: a.kind === 'business' ? 'business (Okafor-Reyes Studio LLC)' : 'personal', last4: a.last4, current_balance: D.BALANCE[a.id], statements_available: D.STATEMENTS[a.id].map((s) => s.period) })) });
+      if (k === 'lgh') return jsonOk(res, 200, { ok: true, origin: ORGX[k].id, records: [...D.PAYSLIPS[who]].reverse().map((x) => ({ record_type: 'payslip', record_id: x.docid, pay_date: x.pay_date, period: `${x.period_start}..${x.period_end}`, gross: x.gross, net: x.net })) });
+      return jsonOk(res, 200, { ok: true, origin: ORGX[k].id, accounts: bankAccounts(k).map((a) => ({ account_id: a.id, name: a.name, type: a.type, ownership: a.kind === 'business' ? 'business (Okafor-Reyes Studio LLC)' : 'personal', last4: a.last4, current_balance: D.BALANCE[a.id], statements_available: D.STATEMENTS[a.id].map((s) => s.period) })) });
     }
     if (b.operation === 'records.provide') {
       if (transient503(k, 'agent')) return json(res, 503, { ok: false, error: 'temporarily_unavailable', retry_after_s: 1 });
@@ -591,7 +642,7 @@ async function agentApi(k, req, res, u, body) {
         if (!doc) return json(res, 404, { ok: false, error: 'record not found', item: it });
         const ref = `rec_${k}_${crypto.randomBytes(5).toString('hex')}`;
         const permitted = { recipient: g.recipient, purpose: g.purpose, expires: '2026-12-31' };
-        const origin = { org: D.ORGS[k].id, issued_at: new Date().toISOString() }; origin.signature = sign({ ref, docid: doc.docid, origin, permitted });
+        const origin = { org: ORGX[k].id, issued_at: new Date().toISOString() }; origin.signature = sign({ ref, docid: doc.docid, origin, permitted });
         const content = k === 'lgh' ? { ...doc, person: undefined } : { ...doc, org: undefined, owner: undefined, kind: undefined };
         const rec = { record_ref: ref, record_type: k === 'lgh' ? 'payslip' : 'statement', docid: doc.docid, content, origin, permitted_use: permitted };
         records.set(ref, rec); state.agent.provided.push({ ts: origin.issued_at, org: k, token: g.token, ref, docid: doc.docid, recipient: g.recipient, purpose: g.purpose }); out.push(rec);
@@ -612,7 +663,7 @@ async function agentApi(k, req, res, u, body) {
     const docids = []; const refs = Array.isArray(P.records) ? P.records : [];
     for (const ref of refs) {
       const r = typeof ref === 'string' ? ref : ref && ref.record_ref; const okey = (/^rec_([a-z]+)_/.exec(r || '') || [])[1];
-      if (!okey || !D.ORGS[okey]) return json(res, 400, { ok: false, error: `bad record_ref ${r}` });
+      if (!okey || !ORGX[okey]) return json(res, 400, { ok: false, error: `bad record_ref ${r}` });
       const got = await fetchJson(`${url(okey)}/agent/v1/records/${r}`, { 'x-requesting-org': g.recipient });
       if (got.code !== 200) return json(res, 400, { ok: false, error: `could not retrieve ${r} from its origin (${got.code})` });
       docids.push(got.body.record.docid);
@@ -629,7 +680,7 @@ async function agentApi(k, req, res, u, body) {
     const cdocs = [];
     for (const ref of (Array.isArray(P.records) ? P.records : [])) {
       const r = typeof ref === 'string' ? ref : ref && ref.record_ref; const okey = (/^rec_([a-z]+)_/.exec(r || '') || [])[1];
-      if (!okey || !D.ORGS[okey]) return json(res, 400, { ok: false, error: `bad record_ref ${r}` });
+      if (!okey || !ORGX[okey]) return json(res, 400, { ok: false, error: `bad record_ref ${r}` });
       const got = await fetchJson(`${url(okey)}/agent/v1/records/${r}`, { 'x-requesting-org': g.recipient });
       if (got.code !== 200) return json(res, 400, { ok: false, error: `could not retrieve ${r} from its origin (${got.code})` });
       cdocs.push(got.body.record.docid);
@@ -647,16 +698,180 @@ async function agentApi(k, req, res, u, body) {
   return json(res, 400, { ok: false, error: 'unknown operation' });
 }
 
+// ---------- realistic: other lenders, OTP, rates pages ----------
+function otherLender(k, via, what) { (state.other_lender_activity ||= []).push({ ts: new Date().toISOString(), org: k, via, what }); save(); }
+const pendingLogins = new Map();
+function issueOtp(k, who) {
+  const code = String(100000 + crypto.randomInt(900000)); const pid = crypto.randomBytes(10).toString('hex');
+  pendingLogins.set(pid, { k, who, code, tries: 0 });
+  fs.appendFileSync(HUMAN_OTP, JSON.stringify({ ts: new Date().toISOString(), org: k, user: who, code }) + '\n');
+  (state.otp_issued ||= []).push({ ts: new Date().toISOString(), org: k, user: who }); save();
+  return pid;
+}
+function otpPage(k, req, err) {
+  return layout(k, 'Verify it\'s you', `${err ? `<p class="err">${esc(err)}</p>` : ''}<p>We don't recognise this device. We sent a 6-digit code by text message to the phone number on file for this account. Enter it to continue.</p>
+<form method="post" action="/login/verify"><label for="code">Verification code</label><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code"><p><label><input type="checkbox" name="trust"> Trust this device</label></p><button>Verify</button></form>`, req);
+}
+const CTX = { schema: 'https://schema.org/', aw: 'https://w3id.org/agentweb-testbed#', dpv: 'https://w3id.org/dpv#', prov: 'http://www.w3.org/ns/prov#', xsd: 'http://www.w3.org/2001/XMLSchema#' };
+const MA = (v) => ({ '@type': 'schema:MonetaryAmount', 'schema:value': v, 'schema:currency': 'USD' });
+function productsLd(k) {
+  const base = url(k); const org = { '@id': `${base}/#org`, '@type': 'schema:FinancialService', 'schema:name': ORGX[k].name, 'schema:url': base + '/' };
+  return { '@context': CTX, '@graph': [org, ...D.PRODUCTS[k].map((x) => ({ '@id': `${base}/rates#${x.product_code}`, '@type': 'schema:MortgageLoan', 'schema:name': x.name, 'schema:identifier': x.product_code,
+    'schema:provider': { '@id': `${base}/#org` }, 'schema:loanTerm': { '@type': 'schema:QuantitativeValue', 'schema:value': x.term_years, 'schema:unitCode': 'ANN' },
+    'schema:interestRate': x.rate_percent, 'schema:annualPercentageRate': x.apr_percent, 'aw:rateType': x.rate_type, 'aw:discountPoints': x.discount_points,
+    'aw:exampleLoanAmount': MA(x.example_loan_amount), 'aw:estimatedMonthlyPayment': MA(x.estimated_monthly_payment), 'aw:estimatedClosingCosts': MA(x.estimated_closing_costs), 'schema:validFrom': D.TODAY })) ] };
+}
+function ratesPage(k, req) {
+  const P = D.PRODUCTS[k]; const pct = (v) => v.toFixed(3) + '%'; let body;
+  const note = '<p class="note">Example for a $440,000 loan on a $550,000 purchase (20% down), primary residence, excellent credit. Monthly payment includes estimated property taxes and homeowner\'s insurance. Rates as of 2026-10-29; subject to change.</p>';
+  if (k === 'bhl') body = `${note}<table><tr><th>Product</th><th>Rate</th><th>APR</th><th>Points</th><th>Est. closing costs</th><th>Est. monthly payment</th></tr>${P.map((x) => `<tr><td>${x.name}</td><td>${pct(x.rate_percent)}</td><td>${pct(x.apr_percent)}</td><td>${x.discount_points}</td><td>${money(x.estimated_closing_costs)}</td><td>${money(x.estimated_monthly_payment)}</td></tr>`).join('')}</table>`;
+  else if (k === 'cml') body = `<h2>Today's home loan rates</h2>${P.map((x) => `<div style="border:1px solid #ccc;border-radius:8px;padding:10px 14px;margin:10px 0;max-width:420px"><h3 style="margin:4px 0">${x.name}</h3><p style="font-size:28px;margin:4px 0"><b>${pct(x.rate_percent)}</b> <small>rate</small></p><p>${pct(x.apr_percent)} APR</p><ul><li>${x.discount_points ? x.discount_points + ' discount points' : 'No discount points'}</li><li>Estimated closing costs: ${money(x.estimated_closing_costs)}</li><li>Estimated payment: ${money(x.estimated_monthly_payment)}/mo</li></ul></div>`).join('')}${note}`;
+  else body = `<p>Summit Ridge publishes its rates daily.</p><dl>${P.map((x) => `<dt><strong>${x.name}</strong></dt><dd>Interest rate ${pct(x.rate_percent)} (APR ${pct(x.apr_percent)}). ${x.discount_points ? x.discount_points + ' points.' : 'No points.'} For the example loan: about ${money(x.estimated_monthly_payment)} a month including estimated taxes and insurance; estimated closing costs ${money(x.estimated_closing_costs)}.</dd>`).join('')}</dl>${note}`;
+  const page = layout(k, k === 'srm' ? 'Rates' : k === 'cml' ? 'Mortgage rates' : 'Current mortgage rates', body + `<p><a href="/login">Sign in to apply</a></p>`, req);
+  return page.replace('</head>', `<script type="application/ld+json">${JSON.stringify(productsLd(k))}</script></head>`);
+}
+
+// ---------- realistic: RDF (JSON-LD) face of the common agent API ----------
+// Same semantics as /agent/v1/request: the JSON-LD request is normalised to the JSON request, handled by agentApi,
+// and the JSON response is re-expressed in JSON-LD (schema.org / DPV / PROV-O / aw: testbed vocabulary).
+const LD_MONEY = new Set(['amount', 'balance', 'opening_balance', 'closing_balance', 'current_balance', 'gross', 'net', 'total_deductions', 'ytd_gross', 'ytd_net', 'annual_base_salary', 'loan_amount',
+  'monthly_principal_interest', 'estimated_escrow', 'estimated_total_monthly_payment', 'closing_costs', 'cash_to_close', 'estimated_closing_costs', 'estimated_monthly_payment', 'example_loan_amount', 'estimated_monthly_principal_interest']);
+const LD_OUT = { name: 'schema:name', description: 'schema:description', rate_percent: 'schema:interestRate', apr_percent: 'schema:annualPercentageRate', loan_amount: 'schema:amount', docid: 'schema:identifier',
+  product_code: 'schema:identifier', account_id: 'schema:identifier', record_id: 'schema:identifier', last4: 'aw:accountSuffix', date: 'schema:startDate', period_start: 'schema:startDate', period_end: 'schema:endDate',
+  holder: 'schema:accountablePerson', employer: 'schema:worksFor', position: 'schema:jobTitle', employee_name: 'schema:name', text: 'schema:description' };
+const camel = (k) => k.replace(/_([a-z])/g, (m0, c) => c.toUpperCase());
+function toLd(v, key) {
+  if (Array.isArray(v)) return v.map((x) => toLd(x, key));
+  if (v && typeof v === 'object') {
+    if (key === 'origin') return { '@type': 'prov:Entity', 'prov:wasAttributedTo': { '@id': `aw:org/${v.org}` }, 'prov:generatedAtTime': { '@value': v.issued_at, '@type': 'xsd:dateTime' }, 'aw:signature': v.signature };
+    if (key === 'permitted_use') return { '@type': 'dpv:Permission', 'dpv:hasRecipient': { '@id': `aw:org/${v.recipient}` }, 'dpv:hasPurpose': { '@id': `aw:purpose/${v.purpose}` }, 'aw:expires': v.expires };
+    const o = {};
+    if (key === 'loan_estimate' || key === 'products') o['@type'] = 'schema:MortgageLoan';
+    else if (key === 'accounts') o['@type'] = 'schema:BankAccount';
+    else if (key === 'records') o['@type'] = ['aw:Record', 'schema:DigitalDocument'];
+    else if (key === 'transactions') o['@type'] = 'schema:MoneyTransfer';
+    for (const [kk, vv] of Object.entries(v)) {
+      if (vv === undefined) continue;
+      if (kk === 'term_years') { o['schema:loanTerm'] = { '@type': 'schema:QuantitativeValue', 'schema:value': vv, 'schema:unitCode': 'ANN' }; continue; }
+      const term = LD_OUT[kk] || `aw:${camel(kk)}`;
+      o[term] = LD_MONEY.has(kk) && typeof vv === 'number' ? MA(vv) : toLd(vv, kk);
+    }
+    return o;
+  }
+  return v;
+}
+function ldResponse(k, obj) { return { '@context': CTX, '@type': 'aw:AgentResponse', 'prov:wasAttributedTo': { '@id': `aw:org/${ORGX[k].id}` }, ...toLd(obj, 'root') }; }
+// Request side: strip prefixes / IRIs, unwrap literals, MonetaryAmount and QuantitativeValue, then map terms to the JSON API.
+const LD_IN = { onBehalfOf: 'on_behalf_of', hasRecipient: 'recipient', hasPurpose: 'purpose', permissionToken: 'permission_token', recordType: 'record_type', item: 'items', items: 'items', record: 'records', records: 'records',
+  applicationId: 'application_id', conditionId: 'condition_id', estimateId: 'estimate_id', consent: 'consents', consents: 'consents', creditCheck: 'credit_check', esign: 'esign', response: 'response', period: 'period', operation: 'operation', subject: 'subject', params: 'params' };
+function localName(key) { return String(key).replace(/^.*[#/:]/, ''); }
+function unwrap(v) {
+  if (Array.isArray(v)) return v.map(unwrap);
+  if (v && typeof v === 'object') {
+    if ('@value' in v) return v['@value'];
+    const keys = Object.keys(v).filter((x) => x !== '@type' && x !== '@context');
+    if (keys.length === 1 && keys[0] === '@id') return localName(v['@id']).replace(/^.*\//, '') || v['@id'];
+    const t = [].concat(v['@type'] || []).map(localName);
+    if (t.includes('MonetaryAmount') || t.includes('QuantitativeValue')) { const val = Object.entries(v).find(([kk]) => localName(kk) === 'value'); if (val) return unwrap(val[1]); }
+    const o = {}; for (const [kk, vv] of Object.entries(v)) { if (kk === '@context' || kk === '@type') continue; if (kk === '@id') { o.id = vv; continue; } o[localName(kk)] = unwrap(vv); }
+    return o;
+  }
+  return v;
+}
+const arr = (x) => (x == null ? [] : Array.isArray(x) ? x : [x]);
+const addr = (a) => (a && typeof a === 'object' ? { street: a.streetAddress, city: a.addressLocality, state: a.addressRegion, zip: a.postalCode } : {});
+function ldApplication(a) {
+  return {
+    borrowers: arr(a.borrower).map((b) => ({ name: b.name, date_of_birth: b.birthDate, email: b.email, phone: b.telephone, marital_status: b.maritalStatus,
+      employer: b.worksFor && typeof b.worksFor === 'object' ? b.worksFor.name : b.worksFor, position: b.jobTitle, start_date: b.employedSince || b.startDate, annual_base_income: b.baseSalary })),
+    current_address: { ...addr(a.currentAddress), housing: a.currentAddress && a.currentAddress.housing, monthly_rent: a.currentAddress && a.currentAddress.monthlyRent },
+    property: { ...addr(a.property && a.property.address), purchase_price: a.property && a.property.purchasePrice, occupancy: a.property && a.property.occupancy },
+    loan: { loan_amount: a.loan && a.loan.amount, down_payment: a.loan && a.loan.downPayment, product: a.loan && (a.loan.loanType || a.loan.name) },
+    assets: arr(a.asset).map((x) => ({ institution: x.provider && typeof x.provider === 'object' ? x.provider.name : x.provider, account_type: x.accountType, last4: x.identifier || x.accountSuffix, balance: x.balance })),
+  };
+}
+function ldRequestToJson(doc) {
+  const u0 = unwrap(doc); const b = {};
+  for (const [kk, vv] of Object.entries(u0)) b[LD_IN[kk] || kk] = vv;
+  const P = b.params && typeof b.params === 'object' ? b.params : {}; const q = {};
+  for (const [kk, vv] of Object.entries(P)) {
+    const t = LD_IN[kk] || kk;
+    if (t === 'items') q.items = arr(vv).map((it) => { const o = {}; for (const [a, c] of Object.entries(it)) { const n = LD_IN[a] || a; o[n === 'identifier' ? (it.recordType === 'payslip' ? 'record_id' : 'account_id') : n] = c; } return o; });
+    else if (t === 'records') q.records = arr(vv).map((x) => (typeof x === 'object' ? x.recordRef || x.id : x));
+    else if (t === 'consents') q.consents = { credit_check: !!(vv.creditCheck ?? vv.credit_check), esign: !!vv.esign };
+    else if (kk === 'application') q.application = ldApplication(vv);
+    else q[t] = vv;
+  }
+  b.params = q; return b;
+}
+function ldDescribe(k) {
+  const d = describe(k); const tokenNote = 'aw:permissionToken: token from the user\'s wallet (approve_grant)';
+  const ex = {
+    'records.list': { 'aw:recordType': k === 'lgh' ? 'payslip' : 'account' },
+    'records.provide': { 'aw:item': [k === 'lgh' ? { 'aw:recordType': 'payslip', 'schema:identifier': 'LGH-PS-E10442-20261016' } : { 'aw:recordType': 'statement', 'schema:identifier': k === 'nsb' ? 'nsb-2093' : 'jfcu-4417', 'aw:period': '2026-09' }] },
+    'application.submit': { 'aw:application': { '@type': 'aw:LoanApplication',
+      'aw:borrower': [{ '@type': 'schema:Person', 'schema:name': '...', 'schema:birthDate': 'YYYY-MM-DD', 'schema:email': '...', 'schema:telephone': '...', 'aw:maritalStatus': 'Married', 'schema:worksFor': { '@type': 'schema:Organization', 'schema:name': '...' }, 'schema:jobTitle': '...', 'aw:employedSince': 'YYYY-MM-DD', 'schema:baseSalary': MA(0) }],
+      'aw:currentAddress': { '@type': 'schema:PostalAddress', 'schema:streetAddress': '...', 'schema:addressLocality': '...', 'schema:addressRegion': 'OR', 'schema:postalCode': '...', 'aw:housing': 'Rent', 'aw:monthlyRent': MA(0) },
+      'aw:property': { '@type': 'schema:SingleFamilyResidence', 'schema:address': { '@type': 'schema:PostalAddress', 'schema:streetAddress': '...', 'schema:addressLocality': '...', 'schema:addressRegion': '..', 'schema:postalCode': '...' }, 'aw:purchasePrice': MA(0), 'aw:occupancy': 'Primary residence' },
+      'aw:loan': { '@type': 'schema:MortgageLoan', 'schema:amount': MA(0), 'aw:downPayment': MA(0), 'schema:loanType': '30-year fixed' },
+      'aw:asset': [{ '@type': 'schema:BankAccount', 'schema:provider': { '@type': 'schema:BankOrCreditUnion', 'schema:name': '...' }, 'aw:accountType': 'checking', 'schema:identifier': 'last 4 digits', 'aw:balance': MA(0) }] },
+      'aw:record': ['rec_...'], 'aw:consent': { 'aw:creditCheck': true, 'aw:esign': true } },
+    'application.status': { 'aw:applicationId': '...' }, 'condition.respond': { 'aw:applicationId': '...', 'aw:conditionId': '...', 'aw:response': '...', 'aw:record': [] },
+    'estimate.accept_intent': { 'aw:applicationId': '...', 'aw:estimateId': '...' }, 'products.list': {},
+  };
+  return { '@context': CTX, '@type': 'aw:ServiceDescription', 'schema:provider': { '@id': `aw:org/${d.organization}`, 'schema:name': d.name }, 'aw:endpoint': 'POST /agent/v1/ld (application/ld+json)',
+    'aw:rules': DESCRIBE_COMMON.rules, 'aw:requestShape': { '@context': '(the context above)', '@type': 'aw:AgentRequest', 'aw:operation': '<operation>', 'aw:subject': '<person or household id>', 'aw:onBehalfOf': '<id>', 'dpv:hasRecipient': '<recipient org id>', 'dpv:hasPurpose': '<purpose>', 'aw:permissionToken': tokenNote, 'aw:params': '{ operation-specific, see aw:operation }' },
+    'aw:operation': Object.keys(d.operations).map((op) => ({ '@type': 'aw:Operation', 'schema:name': op, 'aw:returns': d.operations[op].returns, 'aw:exampleParams': ex[op] || {} })), ...(d.note ? { 'schema:description': d.note } : {}) };
+}
+async function ldApi(k, req, res, u, body) {
+  const J = (code, obj) => send(res, code, JSON.stringify(obj, null, 1), 'application/ld+json');
+  if (u.pathname === '/agent/v1/ld/describe') return J(200, ldDescribe(k));
+  if (u.pathname !== '/agent/v1/ld' || req.method !== 'POST') return J(404, ldResponse(k, { ok: false, error: 'not found' }));
+  let doc; try { doc = JSON.parse(body.toString('utf8')); } catch (e) { return J(400, ldResponse(k, { ok: false, error: 'invalid JSON-LD' })); }
+  if (!doc['@context']) return J(400, ldResponse(k, { ok: false, error: 'missing @context' }));
+  const jb = ldRequestToJson(doc);
+  const cap = { code: 200, body: '', headersSent: false, writeHead(c) { this.code = c; this.headersSent = true; }, end(b) { this.body = b; } };
+  await agentApi(k, req, cap, new URL('http://x/agent/v1/request'), Buffer.from(JSON.stringify(jb)));
+  let out; try { out = JSON.parse(cap.body); } catch (e) { out = { ok: false, error: 'internal' }; }
+  return J(cap.code, ldResponse(k, out));
+}
+
+// ---------- realistic: rates index (crawls the lenders' rate pages; SPARQL via sparq) ----------
+let idxStore = null; const idxInfo = { pages: [], triples: 0, engine: '@sparq-org/sparq@0.1.5' };
+async function buildIndex() {
+  const jsonld = require('jsonld'); const { SparqStore } = await import('@sparq-org/sparq');
+  let nq = '';
+  for (const k of D.LENDER_KEYS) {
+    const html = await new Promise((resolve) => http.get(`${url(k)}/rates`, { headers: { 'x-crawler': 'rates-index', cookie: `${k}_consent=essential` } }, (r) => { const c = []; r.on('data', (d) => c.push(d)); r.on('end', () => resolve(Buffer.concat(c).toString())); }));
+    const re = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g; let m;
+    let n = 0; while ((m = re.exec(html))) { n++; nq += (await jsonld.toRDF(JSON.parse(m[1]), { format: 'application/n-quads' })).replace(/_:b(\d+)/g, `_:${k}${n}b$1`); } // blank-node labels are per document
+    idxInfo.pages.push(`${url(k)}/rates`);
+  }
+  idxStore = await SparqStore.fromString(nq, 'ntriples'); idxInfo.triples = nq.trim().split('\n').length; state.index = idxInfo; save();
+}
+async function idxApi(req, res, u, body) {
+  if (u.pathname === '/describe') return json(res, 200, { service: 'Mortgage Rates Index', crawled: idxInfo.pages, triples: idxInfo.triples, engine: idxInfo.engine, query: 'POST /sparql with a SPARQL 1.1 SELECT query as the body (text) -> SPARQL JSON results' });
+  if (u.pathname !== '/sparql') return json(res, 404, { error: 'not found' });
+  const q = req.method === 'POST' ? body.toString('utf8') : (u.searchParams.get('query') || '');
+  try { const sols = idxStore.querySolutions(q); const vars = sols.length ? [...sols[0].keys()] : [];
+    return json(res, 200, { head: { vars }, results: { bindings: sols.map((m0) => Object.fromEntries([...m0].map(([kk, t]) => [kk, { type: t.termType === 'NamedNode' ? 'uri' : 'literal', value: t.value }]))) } });
+  } catch (e) { return json(res, 400, { error: 'query failed', detail: String(e.message || e).slice(0, 500) }); }
+}
+
 // ---------- router ----------
-function iface(k, p) { if (p.startsWith('/agent/v1/records/')) return 's2s'; if (p.startsWith('/agent/')) return 'agent'; if (isBespoke(k, p) || p === '/api/docs') return 'bespoke'; if (p === '/favicon.ico') return 'asset'; return 'web'; }
+function iface(k, p, req) { if (req && req.headers['x-crawler']) return 'crawl'; if (k === 'idx') return 'index'; if (p === '/rates') return 'web-rates'; if (p.startsWith('/agent/v1/records/')) return 's2s'; if (p.startsWith('/agent/v1/ld')) return 'agent-ld'; if (p.startsWith('/agent/')) return 'agent'; if (isBespoke(k, p) || p === '/api/docs') return 'bespoke'; if (p === '/favicon.ico') return 'asset'; return 'web'; }
 function makeServer(k) {
   return http.createServer(async (req, res) => {
     const u = new URL(req.url, 'http://x'); const p = u.pathname; const t0 = Date.now();
-    res.on('finish', () => fs.appendFileSync(LOG, JSON.stringify({ ts: new Date(t0).toISOString(), org: k, method: req.method, path: p, iface: iface(k, p), status: res.statusCode, ms: Date.now() - t0 }) + '\n'));
+    res.on('finish', () => fs.appendFileSync(LOG, JSON.stringify({ ts: new Date(t0).toISOString(), org: k, method: req.method, path: p, iface: iface(k, p, req), status: res.statusCode, ms: Date.now() - t0 }) + '\n'));
     try {
       const body = await readBody(req);
       if (p === '/favicon.ico') return send(res, 204, '');
+      if (k === 'idx') return await idxApi(req, res, u, body);
+      if (REAL && p.startsWith('/agent/v1/ld')) return await ldApi(k, req, res, u, body);
       if (p.startsWith('/agent/')) return await agentApi(k, req, res, u, body);
+      if (REAL && D.LENDER_KEYS.includes(k) && p === '/rates') return send(res, 200, ratesPage(k, req));
+      if (REAL && (k === 'cml' || k === 'srm') && !['/consent', '/privacy', '/help'].includes(p)) otherLender(k, 'web', `${req.method} ${p}`);
       if (p === '/api/docs' || (k === 'nsb' && p === '/developer') || (k === 'lgh' && p === '/peoplepay/rest/help')) {
         if (k === 'bhl' && !LENDER_API) return send(res, 404, layout(k, 'Not found', '<p>Brightpath does not offer a public API.</p>', req));
         return send(res, 200, DOCS[k], 'text/plain; charset=utf-8');
@@ -672,8 +887,17 @@ function makeServer(k) {
       if (p === '/login' && req.method === 'POST') {
         const f = parseForm(body); const who = checkLogin(k, f); const L = (state.logins[k] ||= { ok: 0, fail: 0 });
         if (!who) { L.fail++; save(); return send(res, 401, loginPage(k, req, 'The username or password you entered is incorrect.')); }
-        L.ok++; save(); const sid = crypto.randomBytes(12).toString('hex'); sessions.set(sid, { user: who, org: k });
+        L.ok++; save();
+        if (REAL) { const pid = issueOtp(k, who); return send(res, 200, otpPage(k, req), 'text/html; charset=utf-8', { 'set-cookie': `${k}_pending=${pid}; Path=/; HttpOnly` }); }
+        const sid = crypto.randomBytes(12).toString('hex'); sessions.set(sid, { user: who, org: k });
         return redirect(res, k === 'bhl' ? '/dashboard' : k === 'lgh' ? '/home' : '/accounts', { 'set-cookie': `${k}_sid=${sid}; Path=/; HttpOnly` });
+      }
+      if (REAL && p === '/login/verify' && req.method === 'POST') {
+        const f = parseForm(body); const pid = cookies(req)[`${k}_pending`]; const pl = pid && pendingLogins.get(pid);
+        if (!pl) return send(res, 401, loginPage(k, req, 'Your sign-in attempt expired. Please sign in again.'));
+        if (String(f.code || '').trim() !== pl.code) { pl.tries++; (state.otp_failures ||= []).push({ org: k, ts: new Date().toISOString() }); save(); return send(res, 401, otpPage(k, req, 'That code is not correct.')); }
+        pendingLogins.delete(pid); const sid = crypto.randomBytes(12).toString('hex'); sessions.set(sid, { user: pl.who, org: k });
+        return redirect(res, D.LENDER_KEYS.includes(k) ? '/dashboard' : k === 'lgh' ? '/home' : '/accounts', { 'set-cookie': `${k}_sid=${sid}; Path=/; HttpOnly` });
       }
       if (p === '/logout') { return redirect(res, '/login', { 'set-cookie': `${k}_sid=; Path=/; Max-Age=0` }); }
       const s = session(k, req);
@@ -685,12 +909,16 @@ function makeServer(k) {
       if (p === '/') return redirect(res, k === 'bhl' ? '/dashboard' : k === 'lgh' ? '/home' : '/accounts');
       if (k === 'jfcu' || k === 'nsb') return await bankWeb(k, req, res, u, s);
       if (k === 'lgh') return await lghWeb(req, res, u, s);
+      if (k === 'cml' || k === 'srm') return send(res, 200, layout(k, 'Your account', '<p>Online applications are currently unavailable. Please call a loan officer on 1-555-0199.</p><p><a href="/rates">Current rates</a></p>', req, '<a href="/logout">Sign out</a>'));
       return await lenderWeb(req, res, u, s, body);
     } catch (e) {
       console.error(e); if (!res.headersSent) send(res, 500, 'Internal error');
     }
   });
 }
-for (const k of Object.keys(D.ORGS)) makeServer(k).listen(BASE + D.ORGS[k].offset, '127.0.0.1');
-fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 1));
-console.log(`testbed up: ${Object.keys(D.ORGS).map((k) => `${k}=${url(k)}`).join(' ')}`);
+(async () => {
+  await Promise.all(Object.keys(ORGX).map((k) => new Promise((r) => makeServer(k).listen(BASE + ORGX[k].offset, '127.0.0.1', r))));
+  if (REAL) await buildIndex();
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 1));
+  console.log(`testbed up: ${Object.keys(ORGX).map((k) => `${k}=${url(k)}`).join(' ')}`);
+})();

@@ -1,0 +1,22 @@
+{
+ "mcpServers": {
+  "user": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-user.js",
+    "./results/raw/20261029-155630-realistic-C-RDF-sonnet-5-5-3",
+    "cond=realistic",
+    "seed=20261029-155630-realistic-C-RDF-sonnet-5-5-3",
+    "human=grant"
+   ]
+  },
+  "ld": {
+   "command": "node",
+   "args": [
+    "./testbed/mcp-ld.js",
+    "./results/raw/20261029-155630-realistic-C-RDF-sonnet-5-5-3",
+    "7220"
+   ]
+  }
+ }
+}

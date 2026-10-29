@@ -1,0 +1,5 @@
+{"ts":"2026-10-29T15:50:57.860Z","tool":"approve_grant","org":"jfcu","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T15:50:57.861Z","tool":"approve_grant","org":"nsb","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T15:50:57.872Z","tool":"approve_grant","org":"lgh","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T15:50:57.876Z","tool":"approve_grant","org":"bhl","scope":"authorised records / application for this mortgage","recipient":"bhl","approved":true}
+{"ts":"2026-10-29T15:51:09.691Z","tool":"ask_user","question":"What was the source of the $8,000.00 deposit into Sam's Juniper FCU checking account (ending 4417) on September 3, 2026, including who or what sent the money, what it was for, and whether it is a gift, loan, income, or a transfer from another account of yours?","answer":"The $8,000 deposit on September 3 was a gift from Sam's parents toward our down payment. It is not a loan and does not need to be repaid."}
