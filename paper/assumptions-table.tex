@@ -1,0 +1,57 @@
+% assumptions-table.tex -- \input{assumptions-table} after adding \usepackage{longtable} (booktabs, hyperref already loaded).
+% Full inventory, file:line locations and scripts: assumptions.md and analysis/ in this folder.
+% Labels in the table: S = source opened 29 Oct 2026; S(survey) = source opened for realism-survey.md;
+% M = measured from the run logs or our own measurement; A = arbitrary (stress value); U = unverified.
+%
+{\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\providecommand{\RR}{\raggedright\hspace{0pt}}
+\begin{longtable}{@{}p{1.70in}p{0.95in}p{2.45in}p{1.10in}@{}}
+\caption{The main assumptions of the testbed and measurement, with their grounding and their effect on the results. Code locations are in the artifact's \texttt{testbed/}. S: source; M: measured; A: arbitrary (stress value); U: unverified.}\label{tab:assumptions}\tabularnewline
+\toprule
+Assumption (value) & Where & Grounding & Effect on results \tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Assumption (value) & Where & Grounding & Effect on results \tabularnewline
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{4}{@{}l}{\emph{Task and documents}}\tabularnewline
+\RR Two months of statements for 4 accounts; 2 payslips each; no W-2s & \RR\texttt{data.js:131} & \RR S: Fannie Mae requires ``the most recent full two-month period'' of statements and a paystub within 30 days with YTD earnings; W-2s for 1--2 years are omitted (B3-4.2-01, B3-3.1-02) & \RR Fewer documents; favours arms that move each file (A, B) \tabularnewline
+\RR One condition: the \$8{,}000 deposit, answered in writing & \RR\texttt{data.js:82} & \RR S: it exceeds 50\% of monthly qualifying income (\$7{,}692), Fannie Mae's ``large deposit'' test (B3-4.2-02); one condition only is A & \RR Real loans raise more; web costs are a lower bound \tabularnewline
+\RR Documents submitted before the Loan Estimate & \RR\texttt{server.js:274} & \RR S(survey): Reg~Z bars requiring verification documents first (12 CFR 1026.19(e)(2)(iii)) & \RR A compliant order adds a wait cycle (1--4 requests, M) \tabularnewline
+\multicolumn{4}{@{}l}{\emph{Loan Estimate and limits}}\tabularnewline
+\RR Loan Estimate after a fixed 5\,s & \RR\texttt{server.js:220} & \RR S: due within 3 business days (CFPB); M: see text & \RR 0--4 requests; about 6\,s of code-run wall time \tabularnewline
+\RR Rate 6.25\%; limit 6.5\% & \RR\texttt{data.js:149}, \texttt{data.js:181} & \RR S: Freddie Mac 30-year average 7.24\% on 29 Oct 2026, 6.17\% a year earlier & \RR None on cost; within-limit offer optimistic \tabularnewline
+\RR Escrow \$333.25 a month (tax 0.59\%, insurance \$774 a year) & \RR\texttt{data.js:150} & \RR S: Oregon tax 0.81\% (Tax Foundation) and insurance \$1{,}353 a year (ValuePenguin) give \$484, so the payment is \$3{,}193, above the \$3{,}100 limit & \RR The baseline ``within limits'' outcome depends on it \tabularnewline
+\RR Closing costs \$12{,}850 (2.9\% of loan) & \RR\texttt{data.js:152} & \RR S, partial: 2025 title and settlement costs averaged 1.04\% of price (LodeStar), excluding lender fees; total U & \RR None \tabularnewline
+\RR Out-of-limits estimate: 6.875\% with escrow set to 0 & \RR\texttt{data.js:155} & \RR A, so that only the rate breaks a limit & \RR Isolates the rate check \tabularnewline
+\RR Three lenders compared on advertised example figures & \RR\texttt{data.js:174} & \RR S: CFPB advises ``at least three Loan Estimates''; advertised rates are not offers & \RR Discovery cost (3--5 requests) is a lower bound \tabularnewline
+\multicolumn{4}{@{}l}{\emph{Interfaces and environment}}\tabularnewline
+\RR Localhost, 1--4\,KB pages, no subresources, about 0.01\,s per page & \RR\texttt{server.js:920} & \RR M: 13 real bank and lender pages had median TTFB 0.67\,s, DOMContentLoaded 1.85\,s, load 5.49\,s, 109 requests and 7.7$\times$ larger accessibility snapshots; HTTP Archive median 2.65\,MB and 71 requests & \RR Web time and tokens are lower bounds (see text) \tabularnewline
+\RR No bot management or CAPTCHAs & -- & \RR S(survey): Akamai Bot Manager on 10 of 13 big-bank logins & \RR Favours websites \tabularnewline
+\RR Per-organization consumer APIs and the common API exist and are clean & \RR\texttt{server.js:331}, \texttt{server.js:563} & \RR S(survey): hypothetical; only aggregators today & \RR Favours B, B-full and C \tabularnewline
+\multicolumn{4}{@{}l}{\emph{Human in the loop and friction}}\tabularnewline
+\RR A code at every web login (devices never remembered); one consent or approval per organization & \RR\texttt{server.js:891}, \texttt{user-tool.js}: \texttt{43}, \texttt{53} & \RR S(survey): new-device codes match bank practice; the per-organization counts are A & \RR Human counts \tabularnewline
+\RR Humans answer instantly and correctly & \RR\texttt{user-tool.js} & \RR A; S: the SMS second-factor step has a median of 16.6\,s (Reese et al.) & \RR API arms' wall time is understated most \tabularnewline
+\RR Session expiry after 4 pages (8 at the lender); one 503; tokens expire after 1--2 uses & \RR\texttt{server.js}: \texttt{46--47}, \texttt{380}, \texttt{609} & \RR A. S(survey): real idle timeouts are 20--60\,min; M: no single-site web session lasted more than 8.3\,min & \RR A time-based timeout would never fire; the friction results depend on A \tabularnewline
+\multicolumn{4}{@{}l}{\emph{Runtime and measurement}}\tabularnewline
+\RR Claude Code 2.1.280 with default effort; its prompt is in every request & \RR\texttt{llm.js:10}, \texttt{runner.js:150} & \RR M: first-request context 9.4k (code arms) to 16.5k (A) tokens; thinking tokens non-zero & \RR All counts include the runtime \tabularnewline
+\RR Model request = assistant message; 1--3 housekeeping calls excluded & \RR\texttt{llm.js:47}, \texttt{llm.js:59} & \RR M & \RR Counts are 1--3 below all API calls \tabularnewline
+\RR Tokens summed over classes, unweighted & \RR\texttt{llm.js:46} & \RR M: cache reads are 90--98\% of tokens; S: they cost 1/20 of base input (Anthropic pricing) & \RR Token ratios exceed cost ratios \tabularnewline
+\RR Cost recomputed at list price from token classes, not the CLI's \texttt{total\_cost\_usd} & \RR\texttt{runner.js:169} & \RR M: the CLI figure was 1.95--1.99$\times$ list price for Sonnet 5.5 (consistent with Opus rates, U); Opus matches & \RR We report list-price costs \tabularnewline
+\RR Wall time from CLI start; includes start-up and the 5\,s delay & \RR\texttt{runner.js:142} & \RR M: 2.9\,s to the first model request & \RR See text \tabularnewline
+\RR Up to six runs at once & \RR results README & \RR M: no consistent within-arm latency change at $\geq$4 runs in flight & \RR Variance only \tabularnewline
+\end{longtable}
+}
+
+\paragraph{Sensitivity.}
+Where the logs allow, we quantified the assumptions instead of arguing them (scripts in the artifact).
+\emph{Loan Estimate delay.} Without the 5\,s delay, a median of 2 model requests (range 1--4) and 9.8\,s would disappear from a website run, 4 requests and 17\,s from B, 1 request and 2.6\,s from C1, and none from the code-run set-ups. For those set-ups, however, the delay plus a 2\,s polling interval is 6.0\,s of their 22--23\,s, so without it they would take about 16--17\,s. No arm's request count moves by more than four, so the ordering in Tables~\ref{tab:main}--\ref{tab:realistic} stands. A real delay of hours to three business days cannot run in one session. It would also outlive the runtime's 1-hour prompt cache, so re-writing the context would add about \$0.33 (A) and \$0.14 (C1) to a run at list prices.
+\emph{Real pages and networks.} We loaded 13 public bank, lender and payroll pages with the same browser build. Taking each page navigation to cost the median DOMContentLoaded time (1.85\,s), each form post or download the median TTFB (0.67\,s), and each API call 0.3\,s (assumed), wall time rises by 31\% for websites (345 to 444\,s), 15\% for B-full, 14\% for C1, 36\% for C2 and 62\% for B-full-code. The ordering holds and the website gap widens; a low--high range of 0.67--5.49\,s per navigation gives $+$10\% to $+$79\% for websites. Real snapshots were 7.7$\times$ larger than the sandbox's, which on a rough upper estimate would nearly triple the website arm's tokens ($+$166\%).
+\emph{Price, not tokens.} At list prices a baseline run costs \$0.85 on websites, \$0.30 with four APIs, \$0.21 with the common API and \$0.01--0.02 with code. These figures are about half the runtime's own Sonnet cost estimates, and they put the website-to-common-API ratio at 4.1$\times$ rather than the 12$\times$ in tokens, because cache reads, which are most of the tokens, are cheap.
+\emph{Humans.} If each code, consent or approval took the 16.6\,s median for SMS codes and each question 60\,s, realistic-condition wall time would be 455\,s for websites, 214\,s for C1 and 148\,s for C2. Human time would then be most of every API set-up's wall time, and the website-to-code ratio would fall from 14$\times$ to 3.1$\times$.
+\emph{Concurrency} had no consistent within-arm effect on per-request latency.

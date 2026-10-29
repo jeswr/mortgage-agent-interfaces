@@ -4,6 +4,7 @@
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage{booktabs}
+\usepackage{longtable}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!50!black}
@@ -151,7 +152,13 @@ C2 common API + code & 2 (2--2) & 0.02M & 22 & 5 & 4 approvals, 1 question \\
 
 \paragraph{Silent failure.} The one failure shows a cost of websites that request counts miss. A download returned a login page, and nothing in the browser's response marked the file as wrong. In this testbed API failures returned explicit errors, and with the common API the lender fetched records from their source, so the agent never handled the files at all.
 
-\paragraph{Cost.} The runtime's API-price equivalent per baseline run was \$1.71 on websites, \$0.60 with four APIs, \$0.42 with the common API and \$0.02 to \$0.03 with code. We did not measure energy, and we do not model adoption or integration costs.
+\paragraph{Cost.} At Anthropic's list prices~\cite{anthropicpricing}, recomputed from each request's token classes, a Sonnet baseline run cost \$0.85 on websites, \$0.30 with four APIs, \$0.21 with the common API and \$0.01 to \$0.02 with code. (The agent runtime's own cost estimate was about twice these figures for Sonnet 5.5, apparently because it priced this model at Opus rates; for Opus it matched list price.) In dollars the website-to-common-API ratio is about 4 rather than the 12 in raw tokens, because cache reads, which are most of the tokens, cost a twentieth of fresh input. We did not measure energy, and we do not model adoption or integration costs.
+
+\section{Assumptions and sensitivity}
+
+Table~\ref{tab:assumptions} lists the main assumptions of the testbed and the measurement, where each is set, how it is grounded, and what it affects; the full inventory of 71 assumptions, with code locations and the analysis scripts, is in the artifact~\cite{artifact}. Sources include the Fannie Mae Selling Guide~\cite{fanniemaeassets,fanniemaedeposits}, the CFPB~\cite{cfpbmultiple,ecfr1026}, Freddie Mac's mortgage rate survey~\cite{pmms}, Oregon tax and insurance averages~\cite{taxfoundation,valuepenguin}, closing-cost data~\cite{lodestar}, the HTTP Archive~\cite{webalmanac}, a usability study of two-factor authentication~\cite{reese2fa}, session-timeout guidance~\cite{nist80063b} and Anthropic's prices~\cite{anthropicpricing}. Two assumptions make the baseline offer optimistic rather than typical: its 6.25\% rate is about one percentage point below the 7.24\% national average on the day of the runs, and its escrow is low, so with grounded taxes and insurance the payment would break the borrowers' limit. Neither affects the cost measurements, but in practice the out-of-limits case would be the more common outcome.
+
+\input{assumptions-table}
 
 \section{How the sandbox compares with today}
 
@@ -209,6 +216,16 @@ The research question and framing are the author's. The experiment was designed,
 \bibitem{prov} T.~Lebo, S.~Sahoo and D.~McGuinness (eds.). PROV-O: The PROV ontology. W3C Recommendation, 2013.
 \bibitem{schemaorg} Schema.org. MortgageLoan, LoanOrCredit and MonetaryAmount types. \url{https://schema.org}, accessed October 2026.
 \bibitem{sparq} sparq. SPARQL engine with WebAssembly build, npm package @sparq-org/sparq, version 0.1.5. \url{https://github.com/sparq-org}.
+\bibitem{anthropicpricing} Anthropic. Pricing. \url{https://platform.claude.com/docs/en/about-claude/pricing}, accessed 29 October 2026.
+\bibitem{cfpbmultiple} Consumer Financial Protection Bureau. Request and review multiple Loan Estimates. \url{https://www.consumerfinance.gov/owning-a-home/compare/request-and-review-multiple-loan-estimates/}.
+\bibitem{fanniemaedeposits} Fannie Mae. Selling Guide B3-4.2-02, Depository accounts. October 2026.
+\bibitem{lodestar} National Mortgage News. Purchase mortgage closing costs dipped in 2025 (LodeStar data). 2026.
+\bibitem{nist80063b} NIST. Digital identity guidelines: authentication and authenticator management, SP 800-63B-4. 2025.
+\bibitem{pmms} Freddie Mac. Primary Mortgage Market Survey, 29 October 2026. \url{https://www.freddiemac.com/pmms}.
+\bibitem{reese2fa} K.~Reese et al. A usability study of five two-factor authentication methods. In \emph{Proc.\ SOUPS}, 2019.
+\bibitem{taxfoundation} Tax Foundation. Oregon tax rates and rankings. \url{https://taxfoundation.org/state/oregon}, accessed October 2026.
+\bibitem{valuepenguin} ValuePenguin. Cheapest homeowners insurance in Oregon. \url{https://www.valuepenguin.com/best-cheap-homeowners-insurance-oregon}, accessed October 2026.
+\bibitem{webalmanac} HTTP Archive. Web Almanac 2024: Page weight; Web Almanac 2025: Performance. \url{https://almanac.httparchive.org}.
 \bibitem{osworld} T.~Xie et al. OSWorld: Benchmarking multimodal agents for open-ended tasks in real computer environments. arXiv:2404.07972, 2024.
 \bibitem{webarena} S.~Zhou et al. WebArena: A realistic web environment for building autonomous agents. arXiv:2307.13854, 2023.
 \end{thebibliography}
